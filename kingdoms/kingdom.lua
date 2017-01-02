@@ -1,13 +1,29 @@
 kingdoms.db.kingdoms = kingdoms.db.kingdoms or {}
 
+local selectedmember = {}
+local selectedinvitation = {}
+
+local kmenuitems = {
+    {"invite", "Manage invitations"},
+    {"levels", "Manage levels"},
+    {"leave", "Leave the kingdom"},
+}
+
+local kmenuitemsd = {}
+for _,item in ipairs(kmenuitems) do
+    table.insert(kmenuitemsd, minetest.formspec_escape(item[2]))
+end
+
 local kcommand = {
     params = "",
     description = "Display the Kingdoms GUI.",
     func = function(name)
         local kingdom = kingdoms.player.kingdom(name)
         if kingdom then
+            selectedmember[name] = nil
             local membersstring = nil
-            for _,member in pairs(kingdom.members) do
+            for _,n in ipairs(kingdom.memberlist) do
+                local member = kingdom.members[n]
                 membersstring = (membersstring and (membersstring .. ",") or "")
                 membersstring = membersstring .. minetest.formspec_escape(("%s - %d"):format(member.name, member.level))
             end
@@ -15,51 +31,127 @@ local kcommand = {
             minetest.show_formspec(name, "kingdoms:joined",
                 "size[9,6]"
                 .."label[0,0;"..minetest.formspec_escape(("%s | You are level %d in this kingdom."):format(kingdom.longname, kingdom.members[name].level)).."]"
-                .."textlist[0,0.5;4,5;members;"..membersstring.."]"
+                .."label[0,0.5;Age: "..("%f"):format((os.time() - kingdom.created) / 60 / 60 / 24).." days]"
+                .."textlist[0,1;4,4;members;"..membersstring.."]"
+                .."label[4.5,0;Kingdom Menu]"
+                .."textlist[4.75,0.5;4,5;menu;"..table.concat(kmenuitemsd, ",").."]"
             )
         else
+            selectedinvitation[name] = 1
             local invitestring = nil
-            for _,invite in ipairs(kingdoms.db.invites[name]) do
-                invitestring = (invitestring and (invitestring .. ",") or "")
-                invitestring = invitestring .. minetest.formspec_escape(("%s from %s"):format(kingdoms.db.kingdoms[invite.kingdom].longname, invite.sender))
+            if kingdoms.db.invitations[name] then
+                for _,invite in ipairs(kingdoms.db.invitations[name]) do
+                    invitestring = (invitestring and (invitestring .. ",") or "")
+                    invitestring = invitestring .. minetest.formspec_escape(("%s from %s"):format(kingdoms.db.kingdoms[invite.kingdom].longname, invite.sender))
+                end
             end
             invitestring = invitestring or ""
             minetest.show_formspec(name, "kingdoms:unjoined",
                 "size[9,6]"
-                .."textlist[0,0;4,5;invitations;"..invitestring.."]"
+                .."textlist[0,0;4,5;invitations;"..invitestring..";1]"
                 .."button[0,5;4,1;acceptinvite;Accept Invitation]"
                 .."field[4.75,0.5;4,0.5;name;Kingdom Name (will remove extra whitespace);]"
                 .."button[4.5,1;4,1;create;Create Kingdom]"
             )
         end
+        return true
     end
 }
 minetest.register_chatcommand("k", kcommand)
 minetest.register_chatcommand("kingdoms", kcommand)
 
+local function clear_invitations(name)
+    if not kingdoms.db.invitations[name] then return end
+    for _,i in ipairs(kingdoms.db.invitations[name]) do
+        local ikingdom = kingdoms.db.kingdoms[i.kingdom]
+        ikingdom.invitations = kingdoms.utils.filteri(ikingdom.invitations, function(v)
+            return v ~= name
+        end)
+    end
+    kingdoms.db.invitations[name] = {}
+end
+
+local function leave_kingdom(name)
+    local kingdom = kingdoms.player.kingdom(name)
+    local level = kingdoms.player.kingdom_state(name).level
+    
+    kingdom.memberlist = kingdoms.utils.filteri(kingdom.memberlist, function(v) return v ~= name end)
+    kingdom.members[name] = nil
+    kingdoms.db.players[name] = nil
+    
+    if #kingdom.memberlist == 0 then
+        kingdoms.db.invitations = kingdoms.utils.filteri(kingdoms.db.invitations, function(v) return v.kingdom ~= kingdom.id end)
+        kingdoms.db.kingdoms[kingdom.id] = nil
+        kingdoms.log("action", ("Kingdom %s ('%s') has been disbanded as '%s' leaves."):format(kingdom.id, kingdom.longname, name))
+        minetest.chat_send_player(name, ("%s has been disbanded."):format(kingdom.longname))
+        return
+    end
+    
+    if level == kingdoms.config.maxlevel then
+        local highest = kingdom.members[kingdom.memberlist[1]]
+        for _,member in pairs(kingdom.members) do
+            if member.level > highest.level then
+                highest = member
+            elseif member.level == highest.level and member.joined < highest.joined then
+                highest = member
+            end
+        end
+        highest.level = kingdoms.config.maxlevel
+        kingdoms.log("action", ("%s is the new monarch of '%s'."):format(highest.name, kingdom.longname))
+        minetest.chat_send_player(name, ("%s is the new monarch of %s"):format(highest.name, kingdom.longname))
+        minetest.chat_send_player(highest.name, ("You are the new monarch of %s"):format(kingdom.longname))
+    end
+end
+
 minetest.register_on_player_receive_fields(function(player, formname, fields)
     if formname ~= "kingdoms:unjoined" then return false end
     local name = player:get_player_name()
     if fields.acceptinvite then
-        if not fields.invitations then
+        if not selectedinvitation[name] or selectedinvitation[name] == 0 or not kingdoms.db.invitations[name] then
             minetest.chat_send_player(name, "You must select an invitation.")
             return true
         end
-        local invite = kingdoms.db.invites[name][fields.invitations]
+        local invite = kingdoms.db.invitations[name][selectedinvitation[name]]
         if not invite then
             minetest.chat_send_player(name, "That invitation does not exist.")
             return true
         end
+        local kingdom = kingdoms.db.kingdoms[invite.kingdom]
+        kingdoms.db.players[name] = kingdom.id
+        kingdom.members[name] = {
+            name = name,
+            level = kingdoms.config.minlevel,
+            joined = os.time(),
+        }
+        table.insert(kingdom.memberlist, name)
+        
+        clear_invitations(name)
+        
+        kingdoms.log("action", ("'%s' has joined '%s'."):format(name, kingdom.longname))
+        minetest.chat_send_player(name, "You are now a member of "..kingdom.longname)
+        return kcommand.func(name)
+    elseif fields.invitations then
+        selectedinvitation[name] = minetest.explode_textlist_event(fields.invitations).index
+        return true
     elseif fields.create then
         local formattedname = fields.name:gsub("%s%s+", " "):gsub("^%s+", ""):gsub("%s+$", "")
         if formattedname == "" then
             minetest.chat_send_player(name, "You must name your kingdom something.")
             return true
         end
+        if formattedname:len() > kingdoms.config.max_name_length then
+            minetest.chat_send_player(name, "That name is too long.")
+            return true
+        end
+        
         local kingdom = {
             id = kingdoms.utils.uniqueid(),
             longname = formattedname,
+            created = os.time(),
             members = {},
+            memberlist = {},
+            invitations = {},
+            levels = {},
         }
         for _,k in ipairs(kingdoms.db.kingdoms) do
             if k.id == kingdom.id then
@@ -71,16 +163,272 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
                 return true
             end
         end
+        
+        clear_invitations(name)
+        
         kingdoms.db.players[name] = kingdom.id
         kingdom.members[name] = {
             name = name,
-            level = 100,
+            level = kingdoms.config.maxlevel,
+            joined = os.time(),
         }
+        table.insert(kingdom.memberlist, name)
         kingdoms.db.kingdoms[kingdom.id] = kingdom
         kingdoms.log("action", ("Kingdom %s ('%s') was created by '%s'."):format(kingdom.id, kingdom.longname, name))
         minetest.chat_send_player(name, "You are now the Monarch of "..kingdom.longname)
         -- Switch to the other formspec.
-        kcommand.func(name)
+        return kcommand.func(name)
+    end
+    return true
+end)
+
+local formspec_invitations
+formspec_invitations = {
+    selected = {},
+    func = function(name)
+        local kingdom = kingdoms.player.kingdom(name)
+        formspec_invitations.selected[name] = kingdom.invitations[1]
+        minetest.show_formspec(name, "kingdoms:invitations",
+            "size[9,7]"
+            .."button[0,0;6,1;kingdoms_special_exit;X]"
+            .."textlist[0,1;4,5;invitations;"..table.concat(kingdom.invitations, ",")..";1]"
+            .."button[0,6;4,1;cancel;Cancel Invitation]"
+            .."field[4.75,1.5;4,0.5;iname;Target Name;]"
+            .."button[4.5,2;4,1;invite;Invite]"
+        )
         return true
+    end,
+}
+
+local formspec_member = {
+    func = function(name)
+        local selected = selectedmember[name]
+        local sstate = kingdoms.player.kingdom_state(selected)
+        minetest.show_formspec(name, "kingdoms:member",
+            "size[5,3]"
+            .."button[0,0;5,1;kingdoms_special_exit;X]"
+            .."label[0,1;"..selected.." - "..tostring(sstate.level).."]"
+            .."button[0,1.5;5,0.5;kick;Kick]"
+            .."field[0.25,3;1,0;level;Level "..tostring(sstate.level)..";"..tostring(sstate.level).."]"
+            .."button[1.2,2.5;4,0.5;changelevel;Change level]"
+        )
+        return true
+    end,
+}
+
+local formspec_levels
+formspec_levels = {
+    selected = {},
+    possible = {
+        "set_levels",
+        "corestone",
+        "kick",
+        "invite",
+        "change_level",
+        "build",
+        "talk",
+    },
+    func = function(name)
+        local kingdom = kingdoms.player.kingdom(name)
+        formspec_levels.selected[name] = formspec_levels.possible[1]
+        local n = {}
+        for _,level in ipairs(formspec_levels.possible) do
+            if not kingdom.levels[level] then
+                kingdom.levels[level] = kingdoms.config["default_level_"..level]
+            end
+            table.insert(n, minetest.formspec_escape(("%s - %d (default %d)"):format(level, kingdom.levels[level], kingdoms.config["default_level_"..level])))
+        end
+        minetest.show_formspec(name, "kingdoms:levels",
+            "size[4,5]"
+            .."button[0,0;4,1;kingdoms_special_exit;X]"
+            .."textlist[0,1;4,4;levels;"..table.concat(n, ",")..";1]"
+        )
+        return true
+    end,
+}
+
+minetest.register_on_player_receive_fields(function(player, formname, fields)
+    if fields.kingdoms_special_exit then
+        return kcommand.func(player:get_player_name())
+    end
+end)
+
+minetest.register_on_player_receive_fields(function(player, formname, fields)
+    if formname ~= "kingdoms:levels" then return false end
+    local name = player:get_player_name()
+    local kingdom = kingdoms.player.kingdom(name)
+    
+    if fields.levels then
+        formspec_levels.selected[name] = formspec_levels.possible[minetest.explode_textlist_event(fields.levels).index]
+        if not kingdoms.player.can(name, "set_levels") then
+            minetest.chat_send_player(name, "You do not have sufficient level to set levels.")
+            return true
+        end
+        minetest.show_formspec(name, "kingdoms:setlevel", "size[4,3]"
+            .."label[0,0;Setting level: "..minetest.formspec_escape(formspec_levels.selected[name]).."]"
+            .."field[0.15,1;4,1;value;Value;"..tostring(kingdom.levels[formspec_levels.selected[name]]).."]"
+            .."button[0,2;4,1;go;Go]")
+        return true
+    end
+end)
+
+minetest.register_on_player_receive_fields(function(player, formname, fields)
+    if formname ~= "kingdoms:setlevel" then return false end
+    local name = player:get_player_name()
+    local kingdom = kingdoms.player.kingdom(name)
+    local state = kingdoms.player.kingdom_state(name)
+    local level = formspec_levels.selected[name]
+    local oldvalue = kingdom.levels[level]
+    local value = tonumber(fields.value)
+    
+    if fields.go then
+        
+        if oldvalue == value then
+            return formspec_levels.func(name)
+        end
+        
+        if not kingdoms.player.can(name, "set_levels") then
+            minetest.chat_send_player(name, "You do not have sufficient level to set levels.")
+            return formspec_levels.func(name)
+        end
+        if value < kingdoms.config.minlevel or value > kingdoms.config.maxlevel then
+            minetest.chat_send_player(name, "Invalid level range.")
+            return true
+        end
+        if value > state.level or oldvalue > state.level then
+            minetest.chat_send_player(name, "You cannot set that level due to your own level.")
+            return true
+        end
+        kingdom.levels[level] = value
+        return formspec_levels.func(name)
+    end
+end)
+
+minetest.register_on_player_receive_fields(function(player, formname, fields)
+    if formname ~= "kingdoms:joined" then return false end
+    local name = player:get_player_name()
+    local kingdom = kingdoms.player.kingdom(name)
+    if fields.menu then
+        local m = minetest.explode_textlist_event(fields.menu)
+        if not kmenuitems[m.index] then return true end
+        local selected = kmenuitems[m.index][1]
+        if selected == "invite" then
+            if not kingdoms.player.can(name, "invite") then
+                minetest.chat_send_player(name, "You do not have sufficent level to invite.")
+                return true
+            end
+            return formspec_invitations.func(name)
+        elseif selected == "leave" then
+            minetest.show_formspec(name, "kingdoms:leave", "size[4,3]"
+                .."label[0,0;Are you sure you want to leave the kingdom?]"
+                .."button[0,1;4,1;yes;Yes]"
+                .."button[0,2;4,1;no;No")
+            return true
+        elseif selected == "levels" then
+            return formspec_levels.func(name)
+        end
+    elseif fields.members then
+        selectedmember[name] = kingdom.memberlist[minetest.explode_textlist_event(fields.members).index]
+        if not selectedmember[name] then return true end
+        return formspec_member.func(name)
+    end
+end)
+
+minetest.register_on_player_receive_fields(function(player, formname, fields)
+    if formname ~= "kingdoms:leave" then return false end
+    local name = player:get_player_name()
+    local kingdom = kingdoms.player.kingdom(name)
+    if fields.yes then
+        leave_kingdom(name)
+        kingdoms.log("action", ("'%s' has left '%s'."):format(name, kingdom.longname))
+        minetest.chat_send_player(name, "You are no longer a member of "..kingdom.longname)
+    else
+        minetest.chat_send_player(name, "You are still a member of "..kingdom.longname)
+    end
+    return kcommand.func(name)
+end)
+
+minetest.register_on_player_receive_fields(function(player, formname, fields)
+    if formname ~= "kingdoms:member" then return false end
+    local name = player:get_player_name()
+    local kingdom = kingdoms.player.kingdom(name)
+    local target = selectedmember[name]
+    local state = kingdoms.player.kingdom_state(name)
+    local tkingdom = kingdoms.player.kingdom(target)
+    local tstate = kingdoms.player.kingdom_state(target)
+    if fields.kick then
+        if state.level <= tstate.level or not kingdoms.player.can(name, "kick") then
+            minetest.chat_send_player(name, "You do not have a sufficient level to kick this player.")
+            return formspec_member.func(name)
+        end
+        minetest.show_formspec(name, "kingdoms:kick", "size[4,3]"
+            .."label[0,0;Are you sure you want to kick "..target.." from the kingdom?]"
+            .."button[0,1;4,1;yes;Yes]"
+            .."button[0,2;4,1;no;No")
+    elseif fields.changelevel then
+        local level = tonumber(fields.level)
+        if not level then
+            minetest.chat_send_player(name, "Invalid level.")
+            return formspec_member.func(name)
+        end
+        if not kingdoms.player.can(name, "change_level") or state.level <= tstate.level or level >= state.level then
+            minetest.chat_send_player(name, "You do not have a sufficient level to set this player's level to "..tostring(level)..".")
+            return formspec_member.func(name)
+        end
+        tstate.level = level
+        return formspec_member.func(name)
+    end
+end)
+
+minetest.register_on_player_receive_fields(function(player, formname, fields)
+    if formname ~= "kingdoms:kick" then return false end
+    local name = player:get_player_name()
+    local kingdom = kingdoms.player.kingdom(name)
+    local state = kingdoms.player.kingdom_state(name)
+    local target = selectedmember[name]
+    local tkingdom = kingdoms.player.kingdom(target)
+    local tstate = kingdoms.player.kingdom_state(target)
+    if not kingdoms.player.can(name, "kick") then return true end
+    if fields.yes and kingdom and tkingdom and kingdom.id == tkingdom.id and state.level > tstate.level then
+        leave_kingdom(target)
+        kingdoms.log("action", ("'%s' has been kicked from '%s' by '%s'."):format(target, kingdom.longname, name))
+        minetest.chat_send_player(target, "You have been kicked from "..kingdom.longname)
+    end
+    return kcommand.func(name)
+end)
+
+minetest.register_on_player_receive_fields(function(player, formname, fields)
+    if formname ~= "kingdoms:invitations" then return false end
+    local name = player:get_player_name()
+    local kingdom = kingdoms.player.kingdom(name)
+    if not kingdoms.player.can(name, "invite") then return true end
+    if fields.invite then
+        if not core.get_auth_handler().get_auth(fields.iname) then
+            minetest.chat_send_player(name, "That player does not exist.")
+            return true
+        end
+        if kingdoms.player.kingdom(fields.iname) then
+            minetest.chat_send_player(name, "That player is already in a kingdom.")
+            return true
+        end
+        kingdoms.db.invitations[fields.iname] = kingdoms.db.invitations[fields.iname] or {}
+        table.insert(kingdoms.db.invitations[fields.iname], {
+            sender = name,
+            kingdom = kingdom.id,
+        })
+        table.insert(kingdom.invitations, fields.iname)
+        return formspec_invitations.func(name)
+    elseif fields.cancel then
+        local selected = formspec_invitations.selected[name]
+        if not selected then return true end
+        kingdoms.db.invitations[selected] = kingdoms.utils.filteri(kingdoms.db.invitations[selected], function(v)
+            return v ~= kingdom.id
+        end)
+        kingdom.invitations = kingdoms.utils.filteri(kingdom.invitations, function(v)
+            return v ~= selected
+        end)
+        return formspec_invitations.func(name)
+    elseif fields.invitations then
+        formspec_invitations.selected[name] = kingdom.invitations[minetest.explode_textlist_event(fields.invitations).index]
     end
 end)

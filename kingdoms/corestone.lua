@@ -22,6 +22,12 @@ function kingdoms.can_dig(r, pos, name)
             end
             return false
         end
+        if not kingdoms.player.can(name, "build") then
+            if kingdoms.show_protection_messages then
+                minetest.chat_send_player(name, "You are not of a sufficient level to build here.")
+            end
+            return false
+        end
     end
     return true
 end
@@ -43,15 +49,30 @@ function kingdoms.is_protected(pos, digger)
     return not kingdoms.can_dig(kingdoms.config.corestone_radius, pos, digger)
 end
 
-local old_is_protected = minetest.is_protected
+old_is_protected = minetest.is_protected
 function minetest.is_protected(pos, digger, digging)
     if kingdoms.is_protected(pos, digger) then
-        if protection_lagporter and digging then
+        if _G['protection_lagporter'] ~= nil and digging then
             protection_lagporter.check(pos, digger)
         end
         return true
     end
     return old_is_protected(pos, digger, digging)
+end
+
+-- Build the Corestone infotext, do not resend meta if unnecessary.
+local function build_infotext(pos)
+    local akingdom = kingdoms.bypos(pos)
+    local meta = minetest.get_meta(pos)
+    local infotext = ""
+    if akingdom then
+        infotext = "Corestone of "..akingdom.longname
+    else
+        infotext = "Inactive Corestone"
+    end
+    if meta:get_string("infotext") ~= infotext then
+        meta:set_string("infotext", infotext)
+    end
 end
 
 minetest.register_node("kingdoms:corestone", {
@@ -85,8 +106,8 @@ minetest.register_node("kingdoms:corestone", {
             end
             
             local kingdom = kingdoms.player.kingdom(placer:get_player_name())
-            if not kingdom then
-                minetest.chat_send_player(placer:get_player_name(), "You cannot place a corestone if you are not part of a kingdom.")
+            if not kingdom or not kingdoms.player.can(placer:get_player_name(), "corestone") then
+                minetest.chat_send_player(placer:get_player_name(), "You cannot place a corestone if you are not of sufficient level in a kingdom.")
                 return itemstack
             end
             
@@ -95,7 +116,7 @@ minetest.register_node("kingdoms:corestone", {
                 return itemstack
             end
             
-            local radius = kingdoms.config.corestone_radius * 4
+            local radius = kingdoms.config.corestone_radius * kingdoms.config.corestone_overlap_multiplier
             
             kingdoms.spm(false)
             local canplace = not kingdoms.can_dig(radius, pointed_thing.under, placer:get_player_name()) or not kingdoms.can_dig(radius, pointed_thing.above, placer:get_player_name())
@@ -105,6 +126,7 @@ minetest.register_node("kingdoms:corestone", {
                 return itemstack
             end
             
+            kingdom.corestone = pointed_thing.above
             kingdoms.log("action", ("Corestone of '%s' placed at %s."):format(kingdom.longname, minetest.pos_to_string(pointed_thing.above)))
             
             return minetest.item_place(itemstack, placer, pointed_thing)
@@ -114,8 +136,22 @@ minetest.register_node("kingdoms:corestone", {
             local kingdom = kingdoms.player.kingdom(placer:get_player_name())
             local meta = minetest.get_meta(pos)
             meta:set_string("kingdom.id", kingdom.id)
-            meta:set_string("infotext", ("Corestone of %s"):format(kingdom.longname))
+            build_infotext(pos)
 	end,
+        
+        can_dig = function(pos, digger)
+            local akingdom = kingdoms.bypos(pos)
+            local pkingdom = kingdoms.player.kingdom(digger:get_player_name())
+            -- Can only dig if this is the digger's kingdom and he has enough levels.
+            return not akingdom or (pkingdom and pkingdom.id == akingdom.id and kingdoms.player.can(digger:get_player_name(), "corestone"))
+        end,
+        
+        on_destruct = function(pos)
+            local kingdom = kingdoms.bypos(pos)
+            if not kingdom then return end
+            kingdom.corestone = nil
+            kingdoms.log("action", ("Corestone of '%s' removed at %s."):format(kingdom.longname, minetest.pos_to_string(pos)))
+        end,
 
 	on_use = function(itemstack, user, pointed_thing)
 	end,
@@ -126,3 +162,10 @@ minetest.register_node("kingdoms:corestone", {
 	on_punch = function(pos, node, puncher)
 	end,
 })
+
+minetest.register_abm{
+    nodenames = {"kingdoms:corestone"},
+    interval = 1,
+    chance = 1,
+    action = build_infotext,
+}

@@ -13,8 +13,8 @@ minetest.register_globalstep(function(dtime)
         local akingdom = kingdoms.bypos(pos)
         kingdoms.spm(false)
         local infostrings = {
-            akingdom and ("This area is owned by %s"):format(akingdom.longname) or "This area is neutral.",
-            pkingdom and ("You are a member of %s"):format(pkingdom.longname) or "You are neutral with "..kingdoms.utils.s("invite", #kingdoms.db.invites[name])..".",
+            akingdom and ("This area is owned by %s"):format(akingdom.longname) or ((kingdoms.can_dig(kingdoms.config.corestone_radius * kingdoms.config.corestone_overlap_multiplier, pos, "") and pos.y >= kingdoms.config.corestone_miny) and "This area is neutral and available." or "This area is neutral."),
+            pkingdom and ("You are a level %d member of %s"):format(kingdoms.player.kingdom_state(name).level, pkingdom.longname) or "You are neutral with "..kingdoms.utils.s("invitation", kingdoms.db.invitations[name] and #kingdoms.db.invitations[name] or 0)..".",
             kingdoms.is_protected(pos, name) and "You cannot dig here." or "You can dig here.",
         }
         kingdoms.spm(true)
@@ -40,4 +40,8 @@ minetest.register_globalstep(function(dtime)
             hud.oldinfo = infostring
         end
     end
+end)
+
+minetest.register_on_leaveplayer(function(player)
+    huds[player:get_player_name()] = nil
 end)

@@ -16,3 +16,15 @@ function kingdoms.utils.s(label, number, s)
         return ("%d %s%s"):format(number, label, s or "s")
     end
 end
+
+function kingdoms.utils.filteri(table, func)
+    local ret = {}
+    local i = 1
+    for _,v in ipairs(table) do
+        if func(v) then
+            ret[i] = v
+            i = i + 1
+        end
+    end
+    return ret
+ end

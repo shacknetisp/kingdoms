@@ -6,7 +6,7 @@ function kingdoms.spm(s)
     kingdoms.show_protection_messages = s
 end
 
-function kingdoms.is_protected(r, pos, name)
+function kingdoms.can_dig(r, pos, name)
     if not name or not pos then return false end
     local kingdom = kingdoms.player.kingdom(name)
     local positions = minetest.find_nodes_in_area(
@@ -16,7 +16,7 @@ function kingdoms.is_protected(r, pos, name)
     for _, pos in ipairs(positions) do
         local meta = minetest.get_meta(pos)
         local kid = meta:get_string("kingdom.id")
-        if not kingdom or kid ~= kingdom.id then
+        if (not kingdom or kid ~= kingdom.id) and kingdoms.db.kingdoms[kid] then
             if kingdoms.show_protection_messages then
                 minetest.chat_send_player(name, ("This area is part of a kingdom ('%s') of which you are not a member."):format(kingdoms.db.kingdoms[kid].longname))
             end
@@ -26,9 +26,26 @@ function kingdoms.is_protected(r, pos, name)
     return true
 end
 
+function kingdoms.bypos(pos)
+    local r = kingdoms.config.corestone_radius
+    local positions = minetest.find_nodes_in_area(
+        {x = pos.x - r, y = pos.y - r, z = pos.z - r},
+        {x = pos.x + r, y = pos.y + r, z = pos.z + r},
+        {"kingdoms:corestone"})
+    for _, pos in ipairs(positions) do
+        local meta = minetest.get_meta(pos)
+        return kingdoms.db.kingdoms[meta:get_string("kingdom.id")]
+    end
+    return nil
+end
+
+function kingdoms.is_protected(pos, digger)
+    return not kingdoms.can_dig(kingdoms.config.corestone_radius, pos, digger)
+end
+
 local old_is_protected = minetest.is_protected
 function minetest.is_protected(pos, digger, digging)
-    if not kingdoms.is_protected(kingdoms.config.corestone_radius, pos, digger) then
+    if kingdoms.is_protected(pos, digger) then
         if protection_lagporter and digging then
             protection_lagporter.check(pos, digger)
         end
@@ -73,7 +90,7 @@ minetest.register_node("kingdoms:corestone", {
                 return itemstack
             end
             
-            if pos.y < kingdoms.config.corestone_miny then
+            if pointed_thing.under.y < kingdoms.config.corestone_miny then
                 minetest.chat_send_player(placer:get_player_name(), ("You cannot place a corestone below %d."):format(kingdoms.config.corestone_miny))
                 return itemstack
             end
@@ -81,12 +98,14 @@ minetest.register_node("kingdoms:corestone", {
             local radius = kingdoms.config.corestone_radius * 4
             
             kingdoms.spm(false)
-            local canplace = not protector.is_protected(radius, pointed_thing.under, placer:get_player_name()) or not protector.is_protected(radius, pointed_thing.above, placer:get_player_name())
+            local canplace = not kingdoms.can_dig(radius, pointed_thing.under, placer:get_player_name()) or not kingdoms.can_dig(radius, pointed_thing.above, placer:get_player_name())
             kingdoms.spm(true)
             if canplace then
                 minetest.chat_send_player(placer:get_player_name(), "You cannot place a corestone this close to another.")
                 return itemstack
             end
+            
+            kingdoms.log("action", ("Corestone of '%s' placed at %s."):format(kingdom.longname, minetest.pos_to_string(pointed_thing.above)))
             
             return minetest.item_place(itemstack, placer, pointed_thing)
         end,

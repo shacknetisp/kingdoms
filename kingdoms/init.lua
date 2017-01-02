@@ -52,12 +52,12 @@ kingdoms.dbmeta.load()
 minetest.after(kingdoms.config.save_delay, kingdoms.dbmeta.save_after)
 minetest.register_on_shutdown(kingdoms.dbmeta.save)
 
--- Core mod files.
 domodfile("utils.lua")
 
--- Mod interfaces.
 domodfile("kingdom.lua")
 domodfile("player.lua")
+
+domodfile("hud.lua")
 domodfile("corestone.lua")
 
 -- All done!

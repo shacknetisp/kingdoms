@@ -12,8 +12,13 @@ function kingdoms.can_dig(r, pos, name)
     local positions = minetest.find_nodes_in_area(
         {x = pos.x - r, y = pos.y - r, z = pos.z - r},
         {x = pos.x + r, y = pos.y + r, z = pos.z + r},
-        {"kingdoms:corestone"})
+        {"kingdoms:corestone", "kingdoms:servercorestone"})
     for _, pos in ipairs(positions) do
+        local nodename = minetest.get_node(pos).name
+        -- If this is the server spawn, nobody can dig here.
+        if nodename == "kingdoms:servercorestone" then
+            return false
+        end
         local meta = minetest.get_meta(pos)
         local kid = meta:get_string("kingdom.id")
         if (not kingdom or kid ~= kingdom.id) and kingdoms.db.kingdoms[kid] then
@@ -40,9 +45,16 @@ function kingdoms.bypos(pos)
         {"kingdoms:corestone"})
     for _, pos in ipairs(positions) do
         local meta = minetest.get_meta(pos)
-        return kingdoms.db.kingdoms[meta:get_string("kingdom.id")]
+        if kingdoms.db.kingdoms[meta:get_string("kingdom.id")] then
+            return kingdoms.db.kingdoms[meta:get_string("kingdom.id")]
+        end
     end
     return nil
+end
+
+function kingdoms.bycspos(pos)
+    local meta = minetest.get_meta(pos)
+    return kingdoms.db.kingdoms[meta:get_string("kingdom.id")]
 end
 
 function kingdoms.is_protected(pos, digger)
@@ -51,6 +63,10 @@ end
 
 old_is_protected = minetest.is_protected
 function minetest.is_protected(pos, digger, digging)
+    -- If this is an admin, they can dig anywhere without a message.
+    if minetest.check_player_privs(digger, {protection_bypass = true}) then
+        return false
+    end
     if kingdoms.is_protected(pos, digger) then
         if _G['protection_lagporter'] ~= nil and digging then
             protection_lagporter.check(pos, digger)
@@ -61,14 +77,14 @@ function minetest.is_protected(pos, digger, digging)
 end
 
 -- Build the Corestone infotext, do not resend meta if unnecessary.
-local function build_infotext(pos)
-    local akingdom = kingdoms.bypos(pos)
+local function build_infotext(pos, nodename)
     local meta = minetest.get_meta(pos)
+    local akingdom = kingdoms.db.kingdoms[meta:get_string("kingdom.id")]
     local infotext = ""
     if akingdom then
-        infotext = "Corestone of "..akingdom.longname
+        infotext = nodename.." of "..akingdom.longname
     else
-        infotext = "Inactive Corestone"
+        infotext = "Inactive "..nodename
     end
     if meta:get_string("infotext") ~= infotext then
         meta:set_string("infotext", infotext)
@@ -76,96 +92,176 @@ local function build_infotext(pos)
 end
 
 minetest.register_node("kingdoms:corestone", {
-	description = "Kingdom Core",
-	drawtype = "nodebox",
-	tiles = {
-		"moreblocks_circle_stone_bricks.png",
-		"moreblocks_circle_stone_bricks.png",
-		"moreblocks_circle_stone_bricks.png^protector_logo.png"
-	},
-	sounds = default.node_sound_stone_defaults(),
-	groups = {oddly_breakable_by_hand = 2, unbreakable = 1},
-	is_ground_content = false,
-	paramtype = "light",
-	light_source = 0,
+    description = "Kingdom Core",
+    drawtype = "nodebox",
+    tiles = {"kingdoms_corestone.png"},
+    sounds = default.node_sound_stone_defaults(),
+    groups = {oddly_breakable_by_hand = 2, unbreakable = 1},
+    is_ground_content = false,
+    paramtype = "light",
+    light_source = 0,
 
-	node_box = {
-		type = "fixed",
-		fixed = {
-			{-0.5 ,-0.5, -0.5, 0.5, 0.5, 0.5},
-		}
-	},
+    node_box = {
+        type = "fixed",
+        fixed = {
+            {-0.5 ,-0.5, -0.5, 0.5, 0.5, 0.5},
+        }
+    },
+
+    on_blast = function(a, b)
+        return
+    end,
+
+    on_place = function(itemstack, placer, pointed_thing)
+        if not placer or pointed_thing.type ~= "node" then
+            return itemstack
+        end
         
-        on_blast = function(a, b)
-            return
-        end,
-
-	on_place = function(itemstack, placer, pointed_thing)
-            if not placer or pointed_thing.type ~= "node" then
-                return itemstack
-            end
-            
-            local kingdom = kingdoms.player.kingdom(placer:get_player_name())
-            if not kingdom or not kingdoms.player.can(placer:get_player_name(), "corestone") then
-                minetest.chat_send_player(placer:get_player_name(), "You cannot place a corestone if you are not of sufficient level in a kingdom.")
-                return itemstack
-            end
-            
-            if pointed_thing.under.y < kingdoms.config.corestone_miny then
-                minetest.chat_send_player(placer:get_player_name(), ("You cannot place a corestone below %d."):format(kingdoms.config.corestone_miny))
-                return itemstack
-            end
-            
-            local radius = kingdoms.config.corestone_radius * kingdoms.config.corestone_overlap_multiplier
-            
-            kingdoms.spm(false)
-            local canplace = not kingdoms.can_dig(radius, pointed_thing.under, placer:get_player_name()) or not kingdoms.can_dig(radius, pointed_thing.above, placer:get_player_name())
-            kingdoms.spm(true)
-            if canplace then
-                minetest.chat_send_player(placer:get_player_name(), "You cannot place a corestone this close to another.")
-                return itemstack
-            end
-            
-            kingdom.corestone = pointed_thing.above
-            kingdoms.log("action", ("Corestone of '%s' placed at %s."):format(kingdom.longname, minetest.pos_to_string(pointed_thing.above)))
-            
-            return minetest.item_place(itemstack, placer, pointed_thing)
-        end,
-
-	after_place_node = function(pos, placer)
-            local kingdom = kingdoms.player.kingdom(placer:get_player_name())
-            local meta = minetest.get_meta(pos)
-            meta:set_string("kingdom.id", kingdom.id)
-            build_infotext(pos)
-	end,
+        local kingdom = kingdoms.player.kingdom(placer:get_player_name())
+        if not kingdom or not kingdoms.player.can(placer:get_player_name(), "corestone") then
+            minetest.chat_send_player(placer:get_player_name(), "You cannot place a corestone if you are not of sufficient level in a kingdom.")
+            return itemstack
+        end
         
-        can_dig = function(pos, digger)
-            local akingdom = kingdoms.bypos(pos)
-            local pkingdom = kingdoms.player.kingdom(digger:get_player_name())
-            -- Can only dig if this is the digger's kingdom and he has enough levels.
-            return not akingdom or (pkingdom and pkingdom.id == akingdom.id and kingdoms.player.can(digger:get_player_name(), "corestone"))
-        end,
+        if kingdom.corestone then
+            minetest.chat_send_player(placer:get_player_name(), "You cannot place a corestone if the kingdom already has a corestone placed.")
+            return itemstack
+        end
         
-        on_destruct = function(pos)
-            local kingdom = kingdoms.bypos(pos)
-            if not kingdom then return end
-            kingdom.corestone = nil
-            kingdoms.log("action", ("Corestone of '%s' removed at %s."):format(kingdom.longname, minetest.pos_to_string(pos)))
-        end,
+        if pointed_thing.under.y < kingdoms.config.corestone_miny then
+            minetest.chat_send_player(placer:get_player_name(), ("You cannot place a corestone below %d."):format(kingdoms.config.corestone_miny))
+            return itemstack
+        end
+        
+        local radius = kingdoms.config.corestone_radius * kingdoms.config.corestone_overlap_multiplier
+        
+        kingdoms.spm(false)
+        local canplace = not kingdoms.can_dig(radius, pointed_thing.under, placer:get_player_name()) or not kingdoms.can_dig(radius, pointed_thing.above, placer:get_player_name())
+        kingdoms.spm(true)
+        if canplace then
+            minetest.chat_send_player(placer:get_player_name(), "You cannot place a corestone this close to another.")
+            return itemstack
+        end
+        
+        kingdom.corestone = pointed_thing.above
+        kingdoms.log("action", ("Corestone of '%s' placed at %s."):format(kingdom.longname, minetest.pos_to_string(pointed_thing.above)))
+        
+        return minetest.item_place(itemstack, placer, pointed_thing)
+    end,
 
-	on_use = function(itemstack, user, pointed_thing)
-	end,
+    after_place_node = function(pos, placer)
+        local kingdom = kingdoms.player.kingdom(placer:get_player_name())
+        local meta = minetest.get_meta(pos)
+        meta:set_string("kingdom.id", kingdom.id)
+        build_infotext(pos, "Corestone")
+    end,
+        
+    can_dig = function(pos, digger)
+        local akingdom = kingdoms.bycspos(pos)
+        local pkingdom = kingdoms.player.kingdom(digger:get_player_name())
+        -- Can only dig if this is the digger's kingdom and he has enough levels.
+        return not akingdom or (pkingdom and pkingdom.id == akingdom.id and kingdoms.player.can(digger:get_player_name(), "corestone"))
+    end,
+    
+    on_destruct = function(pos)
+        local kingdom = kingdoms.bycspos(pos)
+        if not kingdom then return end
+        kingdom.corestone = nil
+        kingdoms.log("action", ("Corestone of '%s' removed at %s."):format(kingdom.longname, minetest.pos_to_string(pos)))
+    end,
 
-	on_rightclick = function(pos, node, clicker, itemstack)
-	end,
+    on_use = function(itemstack, user, pointed_thing)
+    end,
 
-	on_punch = function(pos, node, puncher)
-	end,
+    on_rightclick = function(pos, node, clicker, itemstack)
+        local akingdom = kingdoms.bycspos(pos)
+        if akingdom then
+            kingdoms.formspec_info.func(clicker:get_player_name(), akingdom)
+        end
+    end,
+
+    on_punch = function(pos, node, puncher)
+    end,
 })
 
 minetest.register_abm{
     nodenames = {"kingdoms:corestone"},
     interval = 1,
     chance = 1,
-    action = build_infotext,
+    action = function(pos) build_infotext(pos, "Corestone") end,
 }
+
+minetest.register_node("kingdoms:servercorestone", {
+    description = "Server Core",
+    drawtype = "nodebox",
+    tiles = {"kingdoms_corestone.png"},
+    sounds = default.node_sound_stone_defaults(),
+    groups = {oddly_breakable_by_hand = 2, unbreakable = 1},
+    is_ground_content = false,
+    paramtype = "light",
+    light_source = 0,
+
+    node_box = {
+        type = "fixed",
+        fixed = {
+            {-0.5 ,-0.5, -0.5, 0.5, 0.5, 0.5},
+        }
+    },
+
+    on_blast = function(a, b)
+        return
+    end,
+
+    on_place = function(itemstack, placer, pointed_thing)
+        if not placer or pointed_thing.type ~= "node" then
+            return itemstack
+        end
+        
+        if not minetest.check_player_privs(placer:get_player_name(), {server = true}) then
+            minetest.chat_send_player(placer:get_player_name(), "You cannot place a server corestone. How did you even get it?")
+            return itemstack
+        end
+        
+        if kingdoms.db.servercorestone then
+            minetest.chat_send_player(placer:get_player_name(), "You cannot place a server corestone if there is already one placed.")
+            return itemstack
+        end
+        
+        -- Even the server corestone cannot overlap already existent corestones.
+        local radius = kingdoms.config.corestone_radius * kingdoms.config.corestone_overlap_multiplier
+        
+        kingdoms.spm(false)
+        local canplace = not kingdoms.can_dig(radius, pointed_thing.under, placer:get_player_name()) or not kingdoms.can_dig(radius, pointed_thing.above, placer:get_player_name())
+        kingdoms.spm(true)
+        if canplace then
+            minetest.chat_send_player(placer:get_player_name(), "You cannot place a corestone this close to another.")
+            return itemstack
+        end
+        
+        kingdoms.db.servercorestone = pointed_thing.above
+        
+        return minetest.item_place(itemstack, placer, pointed_thing)
+    end,
+
+    after_place_node = function(pos, placer)
+        local meta = minetest.get_meta(pos)
+        meta:set_string("infotext", "Server Spawn")
+    end,
+        
+    can_dig = function(pos, digger)
+        return minetest.check_player_privs(digger:get_player_name(), {server = true})
+    end,
+    
+    on_destruct = function(pos)
+        kingdoms.db.servercorestone = nil
+    end,
+
+    on_use = function(itemstack, user, pointed_thing)
+    end,
+
+    on_rightclick = function(pos, node, clicker, itemstack)
+    end,
+
+    on_punch = function(pos, node, puncher)
+    end,
+})

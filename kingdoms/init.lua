@@ -59,6 +59,8 @@ domodfile("player.lua")
 
 domodfile("hud.lua")
 domodfile("corestone.lua")
+domodfile("gen.lua")
+domodfile("crafts.lua")
 
 -- All done!
 kingdoms.log("action", "Completely loaded.")

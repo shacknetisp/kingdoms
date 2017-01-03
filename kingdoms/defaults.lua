@@ -9,13 +9,14 @@ kingdoms.config.minlevel = 1
 kingdoms.config.maxlevel = 100
 
 -- Default levels.
-kingdoms.config.default_level_set_levels = 100
-kingdoms.config.default_level_corestone = 100
-kingdoms.config.default_level_kick = 50
-kingdoms.config.default_level_invite = 50
-kingdoms.config.default_level_change_level = 25
-kingdoms.config.default_level_build = 10
-kingdoms.config.default_level_talk = 1
+kingdoms.config.default_level_set_levels = 100 -- Change level values.
+kingdoms.config.default_level_corestone = 100 -- Place or dig the corestone.
+kingdoms.config.default_level_set_info = 75 -- Set the kingdom's info.
+kingdoms.config.default_level_kick = 50 -- Kick a member of lower level than oneself.
+kingdoms.config.default_level_invite = 50 -- Invite someone to join.
+kingdoms.config.default_level_change_level = 25 -- Change someone's level if their level and the target level are lower than oneself.
+kingdoms.config.default_level_build = 10 -- Build within the corestone's range.
+kingdoms.config.default_level_talk = 1 -- Talk in the kingdom's main channel.
 
 -- A corestone extends in a radius of <corestone_radius>.
 kingdoms.config.corestone_radius = 5

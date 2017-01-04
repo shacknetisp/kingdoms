@@ -4,3 +4,6 @@ minetest.register_craft({
 		{'default:chest_locked', 'default:steel_ingot'},
 	}
 })
+
+-- kingdoms:corestone
+-- kingdoms:claimward

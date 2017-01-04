@@ -37,6 +37,24 @@ function kingdoms.can_dig(r, pos, name)
     return true
 end
 
+function kingdoms.check_claimward(r, pos, name)
+    if not name or not pos then return false end
+    local kingdom = kingdoms.player.kingdom(name)
+    local positions = minetest.find_nodes_in_area(
+        {x = pos.x - r, y = pos.y - r, z = pos.z - r},
+        {x = pos.x + r, y = pos.y + r, z = pos.z + r},
+        {"kingdoms:claimward"})
+    for _, pos in ipairs(positions) do
+        local nodename = minetest.get_node(pos).name
+        local meta = minetest.get_meta(pos)
+        local kid = meta:get_string("kingdom.id")
+        if (not kingdom or kid ~= kingdom.id) and kingdoms.db.kingdoms[kid] then
+            return false
+        end
+    end
+    return true
+end
+
 function kingdoms.check_pos_level(pos, name, level, message)
     local akingdom = kingdoms.bypos(pos)
     local pkingdom = kingdoms.player.kingdom(name)
@@ -149,10 +167,15 @@ minetest.register_node("kingdoms:corestone", {
         local radius = kingdoms.config.corestone_radius * kingdoms.config.corestone_overlap_multiplier
         
         kingdoms.spm(false)
-        local canplace = not kingdoms.can_dig(radius, pointed_thing.under, placer:get_player_name()) or not kingdoms.can_dig(radius, pointed_thing.above, placer:get_player_name())
+        local cantplace = not kingdoms.can_dig(radius, pointed_thing.under, placer:get_player_name()) or not kingdoms.can_dig(radius, pointed_thing.above, placer:get_player_name())
+        local cantplaceward = not kingdoms.check_claimward(kingdoms.config.corestone_radius, pointed_thing.above, placer:get_player_name()) or not kingdoms.check_claimward(kingdoms.config.corestone_radius, pointed_thing.under, placer:get_player_name())
         kingdoms.spm(true)
-        if canplace then
+        if cantplace then
             minetest.chat_send_player(placer:get_player_name(), "You cannot place a corestone this close to another.")
+            return itemstack
+        end
+        if cantplaceward then
+            minetest.chat_send_player(placer:get_player_name(), "You cannot place a corestone this close to an opposing claim ward.")
             return itemstack
         end
         
@@ -200,6 +223,62 @@ minetest.register_abm{
     action = function(pos) build_infotext(pos, "Corestone") end,
 }
 
+minetest.register_node("kingdoms:claimward", {
+    description = "Claim Ward",
+    drawtype = "nodebox",
+    tiles = {"kingdoms_claimward.png"},
+    sounds = default.node_sound_stone_defaults(),
+    groups = {oddly_breakable_by_hand = 2, unbreakable = 1},
+    is_ground_content = false,
+    paramtype = "light",
+    light_source = 0,
+
+    node_box = {
+        type = "fixed",
+        fixed = {
+            {-0.5 ,-0.5, -0.5, 0.5, 0.5, 0.5},
+        }
+    },
+
+    on_place = function(itemstack, placer, pointed_thing)
+        if not placer or pointed_thing.type ~= "node" then
+            return itemstack
+        end
+        
+        local kingdom = kingdoms.player.kingdom(placer:get_player_name())
+        if not kingdom then
+            minetest.chat_send_player(placer:get_player_name(), "You cannot place a ward if you are not a member of a kingdom.")
+            return itemstack
+        end
+        
+        local radius = kingdoms.config.corestone_radius
+        
+        kingdoms.spm(false)
+        local cantplace = not kingdoms.can_dig(radius, pointed_thing.under, placer:get_player_name()) or not kingdoms.can_dig(radius, pointed_thing.above, placer:get_player_name())
+        kingdoms.spm(true)
+        if cantplace then
+            minetest.chat_send_player(placer:get_player_name(), "You cannot place a ward this close to another corestone.")
+            return itemstack
+        end
+        
+        return minetest.item_place(itemstack, placer, pointed_thing)
+    end,
+
+    after_place_node = function(pos, placer)
+        local kingdom = kingdoms.player.kingdom(placer:get_player_name())
+        local meta = minetest.get_meta(pos)
+        meta:set_string("kingdom.id", kingdom.id)
+        build_infotext(pos, "Claim ward")
+    end,
+})
+
+minetest.register_abm{
+    nodenames = {"kingdoms:claimward"},
+    interval = 1,
+    chance = 1,
+    action = function(pos) build_infotext(pos, "Claim ward") end,
+}
+
 minetest.register_node("kingdoms:servercorestone", {
     description = "Server Core",
     drawtype = "nodebox",
@@ -240,10 +319,15 @@ minetest.register_node("kingdoms:servercorestone", {
         local radius = kingdoms.config.corestone_radius * kingdoms.config.corestone_overlap_multiplier
         
         kingdoms.spm(false)
-        local canplace = not kingdoms.can_dig(radius, pointed_thing.under, placer:get_player_name()) or not kingdoms.can_dig(radius, pointed_thing.above, placer:get_player_name())
+        local cantplace = not kingdoms.can_dig(radius, pointed_thing.under, placer:get_player_name()) or not kingdoms.can_dig(radius, pointed_thing.above, placer:get_player_name())
+        local cantplaceward = not kingdoms.check_claimward(kingdoms.config.corestone_radius, pointed_thing.above, placer:get_player_name()) or not kingdoms.check_claimward(kingdoms.config.corestone_radius, pointed_thing.under, placer:get_player_name())
         kingdoms.spm(true)
-        if canplace then
+        if cantplace then
             minetest.chat_send_player(placer:get_player_name(), "You cannot place a corestone this close to another.")
+            return itemstack
+        end
+        if cantplaceward then
+            minetest.chat_send_player(placer:get_player_name(), "You cannot place a corestone this close to an opposing claim ward.")
             return itemstack
         end
         

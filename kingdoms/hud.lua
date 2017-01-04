@@ -13,7 +13,7 @@ minetest.register_globalstep(function(dtime)
         local akingdom = kingdoms.bypos(pos)
         kingdoms.spm(false)
         local infostrings = {
-            akingdom and ("This area is owned by %s"):format(akingdom.longname) or ((kingdoms.can_dig(kingdoms.config.corestone_radius * kingdoms.config.corestone_overlap_multiplier, pos, "") and pos.y >= kingdoms.config.corestone_miny) and "This area is neutral and available." or "This area is neutral."),
+            akingdom and ("This area is owned by %s"):format(akingdom.longname) or ((kingdoms.can_dig(kingdoms.config.corestone_radius * kingdoms.config.corestone_overlap_multiplier, pos, "") and pos.y >= kingdoms.config.corestone_miny and kingdoms.check_claimward(kingdoms.config.corestone_radius, pos, name)) and "This area is neutral and available for " ..(kingdoms.check_claimward(kingdoms.config.corestone_radius, pos, "") and "all" or "you").."." or "This area is neutral."),
             pkingdom and ("You are a level %d member of %s"):format(kingdoms.player.kingdom_state(name).level, pkingdom.longname) or "You are neutral with "..kingdoms.utils.s("invitation", kingdoms.db.invitations[name] and #kingdoms.db.invitations[name] or 0)..".",
             kingdoms.is_protected(pos, name) and "You cannot dig here." or "You can dig here.",
             "Your current chat channel is: "..kingdoms.chat_channels[kingdoms.current_chat_channel(name)].name,

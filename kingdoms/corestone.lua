@@ -37,8 +37,21 @@ function kingdoms.can_dig(r, pos, name)
     return true
 end
 
-function kingdoms.bypos(pos)
-    local r = kingdoms.config.corestone_radius
+function kingdoms.check_pos_level(pos, name, level, message)
+    local akingdom = kingdoms.bypos(pos)
+    local pkingdom = kingdoms.player.kingdom(name)
+    if not akingdom or (akingdom == pkingdom and kingdoms.player.can(name, level)) then
+        return true
+    else
+        if message then
+            minetest.chat_send_player(name, message)
+        end
+        return false
+    end
+end
+
+function kingdoms.bypos(pos, radius)
+    local r = radius or kingdoms.config.corestone_radius
     local positions = minetest.find_nodes_in_area(
         {x = pos.x - r, y = pos.y - r, z = pos.z - r},
         {x = pos.x + r, y = pos.y + r, z = pos.z + r},
@@ -123,7 +136,7 @@ minetest.register_node("kingdoms:corestone", {
             return itemstack
         end
         
-        if kingdom.corestone then
+        if kingdom.corestone.pos then
             minetest.chat_send_player(placer:get_player_name(), "You cannot place a corestone if the kingdom already has a corestone placed.")
             return itemstack
         end
@@ -143,7 +156,8 @@ minetest.register_node("kingdoms:corestone", {
             return itemstack
         end
         
-        kingdom.corestone = pointed_thing.above
+        kingdom.corestone.pos = pointed_thing.above
+        kingdom.corestone.placed = os.time()
         kingdoms.log("action", ("Corestone of '%s' placed at %s."):format(kingdom.longname, minetest.pos_to_string(pointed_thing.above)))
         
         return minetest.item_place(itemstack, placer, pointed_thing)
@@ -166,11 +180,9 @@ minetest.register_node("kingdoms:corestone", {
     on_destruct = function(pos)
         local kingdom = kingdoms.bycspos(pos)
         if not kingdom then return end
-        kingdom.corestone = nil
+        kingdom.corestone.pos = nil
+        kingdom.corestone.dug = os.time()
         kingdoms.log("action", ("Corestone of '%s' removed at %s."):format(kingdom.longname, minetest.pos_to_string(pos)))
-    end,
-
-    on_use = function(itemstack, user, pointed_thing)
     end,
 
     on_rightclick = function(pos, node, clicker, itemstack)
@@ -178,9 +190,6 @@ minetest.register_node("kingdoms:corestone", {
         if akingdom then
             kingdoms.formspec_info.func(clicker:get_player_name(), akingdom)
         end
-    end,
-
-    on_punch = function(pos, node, puncher)
     end,
 })
 
@@ -196,7 +205,7 @@ minetest.register_node("kingdoms:servercorestone", {
     drawtype = "nodebox",
     tiles = {"kingdoms_corestone.png"},
     sounds = default.node_sound_stone_defaults(),
-    groups = {oddly_breakable_by_hand = 2, unbreakable = 1},
+    groups = {oddly_breakable_by_hand = 2, unbreakable = 1, not_in_creative_inventory = 1},
     is_ground_content = false,
     paramtype = "light",
     light_source = 0,
@@ -254,14 +263,5 @@ minetest.register_node("kingdoms:servercorestone", {
     
     on_destruct = function(pos)
         kingdoms.db.servercorestone = nil
-    end,
-
-    on_use = function(itemstack, user, pointed_thing)
-    end,
-
-    on_rightclick = function(pos, node, clicker, itemstack)
-    end,
-
-    on_punch = function(pos, node, puncher)
     end,
 })

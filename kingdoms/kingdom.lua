@@ -4,16 +4,12 @@ local selectedmember = {}
 local selectedinvitation = {}
 
 local kmenuitems = {
-    {"invite", "Manage invitations"},
+    {"invite", "Manage invitations", "invite"},
     {"levels", "Manage levels"},
     {"info", "Manage the description"},
+    {"rename", "Rename the kingdom", "rename"},
     {"leave", "Leave the kingdom"},
 }
-
-local kmenuitemsd = {}
-for _,item in ipairs(kmenuitems) do
-    table.insert(kmenuitemsd, minetest.formspec_escape(item[2]))
-end
 
 -- The main formspecs, contains menus and options to all others and information about the current status.
 local kcommand = {
@@ -30,12 +26,24 @@ local kcommand = {
                 membersstring = membersstring .. minetest.formspec_escape(("%s - %d"):format(member.name, member.level))
             end
             membersstring = membersstring or ""
+            local kmenuitemsd = {}
+            for _,item in ipairs(kmenuitems) do
+                if item[3] then
+                    if kingdoms.player.can(name, item[3]) then
+                        table.insert(kmenuitemsd, minetest.formspec_escape(item[2]))
+                    else
+                        table.insert(kmenuitemsd, "---")
+                    end
+                else
+                    table.insert(kmenuitemsd, minetest.formspec_escape(item[2]))
+                end
+            end
             minetest.show_formspec(name, "kingdoms:joined",
                 "size[9,6]"
                 .."label[0,0;"..minetest.formspec_escape(("%s | You are level %d in this kingdom."):format(kingdom.longname, kingdom.members[name].level)).."]"
                 .."label[0,0.5;Age: "
-                    ..("%f"):format((os.time() - kingdom.created) / 60 / 60 / 24)
-                    .." days | Corestone: "..minetest.formspec_escape(kingdom.corestone and minetest.pos_to_string(kingdom.corestone) or "N/A")
+                    ..kingdoms.utils.s("day", math.floor((os.time() - kingdom.created) / 60 / 60 / 24))
+                    .." days | Corestone: "..minetest.formspec_escape(kingdom.corestone.pos and minetest.pos_to_string(kingdom.corestone.pos) or "N/A")
                     ..minetest.formspec_escape("\n")..kingdoms.utils.s("member", #kingdom.memberlist)
                     .."]"
                 .."textlist[0,1.5;4,4;members;"..membersstring.."]"
@@ -162,8 +170,12 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
             memberlist = {},
             invitations = {},
             levels = {},
+            corestone = {
+                placed = 0,
+                dug = 0,
+            },
         }
-        for _,k in ipairs(kingdoms.db.kingdoms) do
+        for _,k in pairs(kingdoms.db.kingdoms) do
             if k.id == kingdom.id then
                 minetest.chat_send_player(name, "You have managed to collide with another kingdom's ID. Impressive. Try again for a new random ID.")
                 return true
@@ -404,10 +416,10 @@ local formspec_info = {
         end
         minetest.show_formspec(name, "kingdoms:info",
             s
-            .."label[0,0;"..minetest.formspec_escape(("%s: founded %f days ago."):format(akingdom.longname, (os.time() - akingdom.created) / 60 / 60 / 24)).."]"
+            .."label[0,0;"..minetest.formspec_escape(("%s: founded %s ago."):format(akingdom.longname, kingdoms.utils.s("day", math.floor((os.time() - akingdom.created) / 60 / 60 / 24)))).."]"
             .."textarea[0.25,1;6,4;info;Info;"..minetest.formspec_escape(akingdom.info or "").."]"
             ..(cansave and "button[0,5;6,1;save;Save]" or "")
-            ..((not a) and "button[0,6;6,1;kingdoms_special_exit;X]" or "")
+            ..((not a) and (cansave and "button[0,6;6,1;kingdoms_special_exit;X]" or "button[0,5;6,1;kingdoms_special_exit;X]") or "")
         )
         return true
     end,
@@ -437,11 +449,11 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
         local m = minetest.explode_textlist_event(fields.menu)
         if not kmenuitems[m.index] then return true end
         local selected = kmenuitems[m.index][1]
+        local level = kmenuitems[m.index][3]
+        if level and not kingdoms.player.can(name, level) then
+            return true
+        end
         if selected == "invite" then
-            if not kingdoms.player.can(name, "invite") then
-                minetest.chat_send_player(name, "You do not have sufficent level to invite.")
-                return true
-            end
             return formspec_invitations.func(name)
         elseif selected == "leave" then
             minetest.show_formspec(name, "kingdoms:leave", "size[4,3]"
@@ -453,11 +465,46 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
             return formspec_levels.func(name)
         elseif selected == "info" then
             return formspec_info.func(name)
+        elseif selected == "rename" then
+            minetest.show_formspec(name, "kingdoms:rename", "size[4,2]"
+                .."field[0.25,0.2;4,1;name;Kingdom's Name;"..minetest.formspec_escape(kingdom.longname).."]"
+                .."button[0,1;4,1;go;Set Name]")
         end
     elseif fields.members then
         selectedmember[name] = kingdom.memberlist[minetest.explode_textlist_event(fields.members).index]
         if not selectedmember[name] then return true end
         return formspec_member.func(name)
+    end
+end)
+
+minetest.register_on_player_receive_fields(function(player, formname, fields)
+    if formname ~= "kingdoms:rename" then return false end
+    local name = player:get_player_name()
+    local kingdom = kingdoms.player.kingdom(name)
+    if fields.go then
+        if not kingdoms.player.can(name, "rename") then
+            return kcommand.func(name)
+        end
+        local formattedname = fields.name:gsub("%s%s+", " "):gsub("^%s+", ""):gsub("%s+$", "")
+        if formattedname == kingdom.longname then
+            return kcommand.func(name)
+        end
+        if formattedname == "" then
+            minetest.chat_send_player(name, "You must name your kingdom something.")
+            return kcommand.func(name)
+        end
+        if formattedname:len() > kingdoms.config.max_name_length then
+            minetest.chat_send_player(name, "That name is too long.")
+            return kcommand.func(name)
+        end
+        for _,k in pairs(kingdoms.db.kingdoms) do
+            if formattedname == k.longname then
+                minetest.chat_send_player(name, "There is already a kingdom with that name.")
+                return kcommand.func(name)
+            end
+        end
+        kingdom.longname = formattedname
+        return kcommand.func(name)
     end
 end)
 

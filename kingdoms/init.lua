@@ -56,11 +56,20 @@ domodfile("utils.lua")
 
 domodfile("kingdom.lua")
 domodfile("player.lua")
+domodfile("chat.lua")
+domodfile("nametags.lua")
 
 domodfile("hud.lua")
 domodfile("corestone.lua")
 domodfile("gen.lua")
+
+-- Overrides of default to support kingdoms.
+domodfile("ext/chests.lua")
+domodfile("ext/furnace.lua")
+
 domodfile("crafts.lua")
 
 -- All done!
 kingdoms.log("action", "Completely loaded.")
+kingdoms.log("action", "Number of kingdoms in the database: "..tostring(kingdoms.utils.table_len(kingdoms.db.kingdoms)))
+kingdoms.log("action", "Number of players in kingdoms: "..tostring(kingdoms.utils.table_len(kingdoms.db.players)))

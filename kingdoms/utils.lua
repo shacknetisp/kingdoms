@@ -30,6 +30,14 @@ function kingdoms.utils.filteri(table, func)
     return ret
 end
 
+function kingdoms.utils.table_len(t)
+    local ret = 0
+    for _,_ in pairs(t) do
+        ret = ret + 1
+    end
+    return ret
+end
+
 function kingdoms.utils.spairs(t, order)
     local keys = {}
     for k in pairs(t) do keys[#keys+1] = k end

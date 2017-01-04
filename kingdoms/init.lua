@@ -62,6 +62,7 @@ domodfile("nametags.lua")
 domodfile("hud.lua")
 domodfile("corestone.lua")
 domodfile("gen.lua")
+domodfile("barriers.lua")
 
 -- Overrides of default to support kingdoms.
 domodfile("ext/chests.lua")

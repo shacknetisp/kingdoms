@@ -40,3 +40,11 @@ kingdoms.config.player_visible_distance = 4
 
 -- Distance of around speech. Use <player_visible_distance * 16> to match with player visibility.
 kingdoms.config.around = kingdoms.config.player_visible_distance * 16
+
+-- Radius a materializer reaches.
+kingdoms.config.materializer_radius = 5
+-- Number of levels in materialized blocks.
+kingdoms.config.materialized_levels = 4
+-- Materializer ABM settings.
+kingdoms.config.materialized_abm_interval = 2
+kingdoms.config.materialized_abm_chance = 2

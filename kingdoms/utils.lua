@@ -1,5 +1,5 @@
 kingdoms.utils = {}
-        
+
 -- Return a UUID-like identifier.
 function kingdoms.utils.uniqueid()
     local s = ("%x"):format(math.random(0, 0xFFFF))
@@ -53,4 +53,14 @@ function kingdoms.utils.spairs(t, order)
             return keys[i], t[keys[i]]
         end
     end
+end
+
+function kingdoms.utils.probability_list(t)
+    local ret = {}
+    for k,v in pairs(t) do
+        for i=1,v do
+            table.insert(ret, k)
+        end
+    end
+    return ret
 end

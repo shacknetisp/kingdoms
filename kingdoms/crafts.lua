@@ -7,3 +7,6 @@ minetest.register_craft({
 
 -- kingdoms:corestone
 -- kingdoms:claimward
+
+-- kingdoms:materialized_wall_1
+-- kingdoms:materializer

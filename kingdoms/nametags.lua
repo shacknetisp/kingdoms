@@ -14,4 +14,5 @@ minetest.register_globalstep(function(dtime)
     end
 end)
 
+-- Override of the default setting, use <kingdoms.player_visible_distance> instead.
 minetest.setting_set("player_transfer_distance", kingdoms.config.player_visible_distance)

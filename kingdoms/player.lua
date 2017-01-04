@@ -25,9 +25,9 @@ end
 
 local function respawn(player)
     local kingdom = kingdoms.player.kingdom(player:get_player_name())
-    if kingdom and kingdom.corestone then
-        kingdoms.log("action", "Respawning "..player:get_player_name().." at corestone "..minetest.pos_to_string(kingdom.corestone).." of '"..kingdom.longname.."'")
-        player:setpos(vector.add(kingdom.corestone, {x=0, y=1, z=0}))
+    if kingdom and kingdom.corestone.pos then
+        kingdoms.log("action", "Respawning "..player:get_player_name().." at corestone "..minetest.pos_to_string(kingdom.corestone.pos).." of '"..kingdom.longname.."'")
+        player:setpos(vector.add(kingdom.corestone.pos, {x=0, y=1, z=0}))
         return true
     elseif kingdoms.db.servercorestone then
         kingdoms.log("action", "Respawning "..player:get_player_name().." at server corestone "..minetest.pos_to_string(kingdoms.db.servercorestone)..".")

@@ -24,7 +24,7 @@ kingdoms.config.default_level_heavy_doors = 15 -- Open heavy locked doors within
 kingdoms.config.default_level_build = 10 -- Build within the corestone's range.
 
 --- Basic
-kingdoms.config.default_level_furnaces = 1 -- Use furnaces within the corestone's range.
+kingdoms.config.default_level_devices = 1 -- Use devices within the corestone's range.
 kingdoms.config.default_level_chests = 1 -- Open locked chests within the corestone's range.
 kingdoms.config.default_level_doors = 1 -- Open locked doors within the corestone's range.
 kingdoms.config.default_level_talk = 1 -- Talk in the kingdom's main channel.

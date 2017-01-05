@@ -25,5 +25,6 @@ minetest.override_item("default:mese", {
 domodfile("crystals.lua")
 domodfile("spells.lua")
 domodfile("crafts.lua")
+domodfile("timegens.lua")
 
 magic.log("action", "Loaded.")

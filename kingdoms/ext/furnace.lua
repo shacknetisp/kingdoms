@@ -4,7 +4,7 @@
 --
 
 local function active_formspec(fuel_percent, item_percent)
-	local formspec = 
+	local formspec =
 		"size[8,8.5]"..
 		default.gui_bg..
 		default.gui_bg_img..
@@ -55,7 +55,7 @@ local function can_dig(pos, player)
 end
 
 local function allow_metadata_inventory_put(pos, listname, index, stack, player)
-	if not kingdoms.check_pos_level(pos, player:get_player_name(), "furnaces", "You are not of a sufficient level to use this furnace.") then
+	if not kingdoms.check_pos_level(pos, player:get_player_name(), "devices", "You are not of a sufficient level to use this furnace.") then
             return 0
         end
 	local meta = minetest.get_meta(pos)
@@ -84,7 +84,7 @@ local function allow_metadata_inventory_move(pos, from_list, from_index, to_list
 end
 
 local function allow_metadata_inventory_take(pos, listname, index, stack, player)
-	if not kingdoms.check_pos_level(pos, player:get_player_name(), "furnaces", "You are not of a sufficient level to use this furnace.") then
+	if not kingdoms.check_pos_level(pos, player:get_player_name(), "devices", "You are not of a sufficient level to use this furnace.") then
             return 0
         end
 	return stack:get_count()

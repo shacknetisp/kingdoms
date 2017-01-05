@@ -87,6 +87,11 @@ magic.crystals = {
     },
 }
 
+minetest.register_craftitem("magic:null_essence", {
+    description = "Null Essence",
+    inventory_image = "magic_essence.png",
+})
+
 for _,def in ipairs(magic.crystals) do
     minetest.register_node("magic:crystal_"..def.name, {
         description = def.desc.." Crystal",
@@ -103,6 +108,7 @@ for _,def in ipairs(magic.crystals) do
     minetest.register_craftitem("magic:"..def.name.."_essence", {
         description = def.desc.." Essence",
         inventory_image = "magic_essence.png^[colorize:"..def.color..":"..tostring(0xCC),
+        groups = {minor_essence = 1},
     })
 
     minetest.register_craftitem("magic:concentrated_"..def.name.."_essence", {

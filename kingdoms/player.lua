@@ -22,6 +22,21 @@ function kingdoms.player.can(name, level)
     return (kingdom.members[name].level >= check)
 end
 
+function kingdoms.player.canpos(pos, name, level)
+    local akingdom = kingdoms.bypos(pos)
+    local pkingdom = kingdoms.player.kingdom(name)
+    if not akingdom then
+        return true
+    end
+    if not pkingdom then
+        return false
+    end
+    if akingdom.id ~= pkingdom.id then
+        return false
+    end
+    return kingdoms.player.can(name, level)
+end
+
 
 local function respawn(player)
     local kingdom = kingdoms.player.kingdom(player:get_player_name())

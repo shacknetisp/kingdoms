@@ -54,7 +54,7 @@ minetest.register_node("kingdoms:silverblock", {
     description = "Silver Block",
     tiles = {"kingdoms_silver_block.png"},
     is_ground_content = false,
-    groups = {cracky = 1},
+    groups = {cracky = 1, spellbinding = 1, major_spellbinding = 1},
     sounds = default.node_sound_stone_defaults(),
 })
 
@@ -65,7 +65,8 @@ minetest.register_craftitem("kingdoms:silver_lump", {
 
 minetest.register_craftitem("kingdoms:silver_ingot", {
     description = "Silver Ingot",
-    inventory_image = "kingdoms_silver_ingot.png"
+    inventory_image = "kingdoms_silver_ingot.png",
+    groups = {spellbinding = 1},
 })
 
 minetest.register_craft({

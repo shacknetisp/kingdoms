@@ -7,8 +7,23 @@ end
 -- Mod namespace.
 magic = {}
 
+function magic.log(level, message)
+    minetest.log(level, "[magic] "..message)
+end
+
+local mese_mesecons = rawget(_G, "mesecon") and {conductor = {
+    state = mesecon.state.off,
+    onstate = "mesecons_extrawires:mese_powered",
+    rules = mesewire_rules
+    }} or nil
+minetest.override_item("default:mese", {
+	mesecons = mese_mesecons,
+        -- Mese is too strong to be used for minor spellbinding.
+        groups = {cracky = 1, level = 2, major_spellbinding = 1},
+})
+
 domodfile("crystals.lua")
 domodfile("spells.lua")
 domodfile("crafts.lua")
 
-kingdoms.log("action", "Magic loaded.")
+magic.log("action", "Loaded.")

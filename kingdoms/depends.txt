@@ -1,2 +1,3 @@
 default
+magic
 3d_armor?

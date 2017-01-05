@@ -46,5 +46,5 @@ kingdoms.config.materializer_radius = 5
 -- Number of levels in materialized blocks.
 kingdoms.config.materialized_levels = 4
 -- Materializer ABM settings.
-kingdoms.config.materialized_abm_interval = 2
+kingdoms.config.materialized_abm_interval = 30
 kingdoms.config.materialized_abm_chance = 2

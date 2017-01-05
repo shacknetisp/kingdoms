@@ -4,6 +4,7 @@ magic.crystals = {
         desc = "Rage",
         color = "#A00",
         light = 10,
+        fuel = 500,
         ores = {
             {
                 rarity = 10 * 10 * 10,
@@ -11,6 +12,38 @@ magic.crystals = {
                 clust_size     = 1,
                 wherein        = "default:lava_source",
                 y_max = -64,
+            },
+        },
+    },
+    {
+        name = "solidity",
+        desc = "Solidity",
+        color = "#AA0",
+        light = 4,
+    },
+    {
+        name = "area",
+        desc = "Area",
+        color = "#0CC",
+        light = 8,
+    },
+    {
+        name = "control",
+        desc = "Control",
+        color = "#707",
+        light = 7,
+    },
+    {
+        name = "vitality",
+        desc = "Vitality",
+        color = "#0F0",
+        light = 12,
+        ores = {
+            {
+                rarity = 18 * 18 * 18,
+                clust_num_ores = 1,
+                clust_size     = 1,
+                wherein        = "default:dirt",
             },
         },
     },
@@ -37,6 +70,21 @@ magic.crystals = {
             },
         },
     },
+    {
+        name = "day",
+        desc = "Day",
+        color = "#FFF",
+        light = 15,
+        fuel = 350,
+        nodefgen = true,
+    },
+    {
+        name = "night",
+        desc = "Night",
+        color = "#000",
+        light = 0,
+        nodefgen = true,
+    },
 }
 
 for _,def in ipairs(magic.crystals) do
@@ -44,7 +92,7 @@ for _,def in ipairs(magic.crystals) do
         description = def.desc.." Crystal",
         drawtype = "glasslike",
         tiles = {"magic_crystal.png^[colorize:"..def.color..":"..tostring(0xCC)},
-        groups = {cracky = 2},
+        groups = {cracky = 2, not_in_creative_inventory = (def.hidecrystal and 1 or 0)},
         light_source = def.light or 7,
         sunlight_propagates = true,
         use_texture_alpha = true,
@@ -55,6 +103,11 @@ for _,def in ipairs(magic.crystals) do
     minetest.register_craftitem("magic:"..def.name.."_essence", {
         description = def.desc.." Essence",
         inventory_image = "magic_essence.png^[colorize:"..def.color..":"..tostring(0xCC),
+    })
+
+    minetest.register_craftitem("magic:concentrated_"..def.name.."_essence", {
+        description = "Concentrated "..def.desc.." Essence",
+        inventory_image = "magic_concentrated_essence.png^[colorize:"..def.color..":"..tostring(0xCC),
     })
 
     local ndefd = {

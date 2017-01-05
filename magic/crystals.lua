@@ -7,7 +7,7 @@ magic.crystals = {
         fuel = 500,
         ores = {
             {
-                rarity = 10 * 10 * 10,
+                rarity = 4 * 4 * 4,
                 clust_num_ores = 1,
                 clust_size     = 1,
                 wherein        = "default:lava_source",
@@ -54,18 +54,18 @@ magic.crystals = {
         light = 5,
         ores = {
             {
-                rarity = 10 * 10 * 10,
+                rarity = 4 * 4 * 4,
                 clust_num_ores = 1,
                 clust_size     = 1,
                 wherein        = "default:water_source",
-                y_max = -64,
+                y_max = -128,
             },
             {
                 rarity = 16 * 16 * 16,
                 clust_num_ores = 1,
                 clust_size     = 1,
                 wherein        = "default:water_source",
-                y_min = -32,
+                y_min = -128,
                 y_max = -8,
             },
         },
@@ -104,6 +104,8 @@ for _,def in ipairs(magic.crystals) do
         paramtype = "light",
         sounds = default.node_sound_stone_defaults(),
     })
+
+    minetest.after(0.01, function() kingdoms.register_dungeon_node("magic:crystal_"..def.name, 3 / #magic.crystals) end)
 
     minetest.register_craftitem("magic:"..def.name.."_essence", {
         description = def.desc.." Essence",

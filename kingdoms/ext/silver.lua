@@ -58,6 +58,8 @@ minetest.register_node("kingdoms:silverblock", {
     sounds = default.node_sound_stone_defaults(),
 })
 
+kingdoms.register_dungeon_node("kingdoms:silverblock", 2)
+
 minetest.register_craftitem("kingdoms:silver_lump", {
     description = "Silver Lump",
     inventory_image = "kingdoms_silver_lump.png",

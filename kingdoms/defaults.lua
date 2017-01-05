@@ -30,7 +30,7 @@ kingdoms.config.default_level_doors = 1 -- Open locked doors within the coreston
 kingdoms.config.default_level_talk = 1 -- Talk in the kingdom's main channel.
 
 -- A corestone extends in a radius of <corestone_radius>.
-kingdoms.config.corestone_radius = 5
+kingdoms.config.corestone_radius = 32
 kingdoms.config.corestone_overlap_multiplier = 4
 -- A corestone can be placed only above <corestone_miny>.
 kingdoms.config.corestone_miny = -32

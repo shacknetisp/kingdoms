@@ -26,5 +26,6 @@ domodfile("crystals.lua")
 domodfile("spells.lua")
 domodfile("crafts.lua")
 domodfile("timegens.lua")
+domodfile("mapgen.lua")
 
 magic.log("action", "Loaded.")

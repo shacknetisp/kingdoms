@@ -29,3 +29,19 @@ minetest.register_craft({
     output = "magic:null_essence 3",
     recipe = {"group:minor_essence", "default:gold_ingot", "group:minor_essence"},
 })
+
+minetest.register_craft({
+    output = "magic:nightcall",
+    recipe = {
+        {"magic:area_essence", "group:spellbinding", ""},
+        {"default:bronzeblock", "magic:calm_essence", "magic:control_essence"},
+    },
+})
+
+minetest.register_craft({
+    output = "magic:daypull",
+    recipe = {
+        {"magic:area_essence", "group:spellbinding", ""},
+        {"default:bronzeblock", "magic:rage_essence", "magic:control_essence"},
+    },
+})

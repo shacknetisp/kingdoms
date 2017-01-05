@@ -1,4 +1,5 @@
 kingdoms.corestone = {}
+kingdoms.db.corestones = kingdoms.db.corestones or {}
 -- Any mod can set this flag since they run in one thread.
 kingdoms.show_protection_messages = true
 -- Helper function to set the message display state.
@@ -6,13 +7,22 @@ function kingdoms.spm(s)
     kingdoms.show_protection_messages = s
 end
 
+function kingdoms.near_pos(r, pos)
+    local ret = {}
+    for k,v in pairs(kingdoms.db.corestones) do
+        local a = {x = v.x - r, y = v.y - r, z = v.z - r}
+        local b = {x = v.x + r, y = v.y + r, z = v.z + r}
+        if pos.x >= a.x and pos.x <= b.x and pos.y >= a.y and pos.y <= b.y and pos.z >= a.z and pos.z <= b.z then
+            table.insert(ret, v)
+        end
+    end
+    return ret
+end
+
 function kingdoms.can_dig(r, pos, name)
     if not name or not pos then return false end
     local kingdom = kingdoms.player.kingdom(name)
-    local positions = minetest.find_nodes_in_area(
-        {x = pos.x - r, y = pos.y - r, z = pos.z - r},
-        {x = pos.x + r, y = pos.y + r, z = pos.z + r},
-        {"kingdoms:corestone", "kingdoms:servercorestone"})
+    local positions = kingdoms.near_pos(r, pos)
     for _, pos in ipairs(positions) do
         local nodename = minetest.get_node(pos).name
         -- If this is the server spawn, nobody can dig here.
@@ -70,10 +80,7 @@ end
 
 function kingdoms.bypos(pos, radius)
     local r = radius or kingdoms.config.corestone_radius
-    local positions = minetest.find_nodes_in_area(
-        {x = pos.x - r, y = pos.y - r, z = pos.z - r},
-        {x = pos.x + r, y = pos.y + r, z = pos.z + r},
-        {"kingdoms:corestone"})
+    local positions = kingdoms.near_pos(r, pos)
     for _, pos in ipairs(positions) do
         local meta = minetest.get_meta(pos)
         if kingdoms.db.kingdoms[meta:get_string("kingdom.id")] then
@@ -179,6 +186,8 @@ minetest.register_node("kingdoms:corestone", {
             return itemstack
         end
 
+        kingdoms.db.corestones[minetest.pos_to_string(pointed_thing.above)] = pointed_thing.above
+
         kingdom.corestone.pos = pointed_thing.above
         kingdom.corestone.placed = os.time()
         kingdoms.log("action", ("Corestone of '%s' placed at %s."):format(kingdom.longname, minetest.pos_to_string(pointed_thing.above)))
@@ -200,6 +209,7 @@ minetest.register_node("kingdoms:corestone", {
     end,
 
     on_destruct = function(pos)
+        kingdoms.db.corestones[minetest.pos_to_string(pos)] = nil
         local kingdom = kingdoms.bycspos(pos)
         if not kingdom then return end
         kingdom.corestone.pos = nil
@@ -315,6 +325,8 @@ minetest.register_node("kingdoms:servercorestone", {
             return itemstack
         end
 
+        kingdoms.db.corestones[minetest.pos_to_string(pointed_thing.above)] = pointed_thing.above
+
         kingdoms.db.servercorestone = pointed_thing.above
 
         return minetest.item_place(itemstack, placer, pointed_thing)
@@ -330,6 +342,7 @@ minetest.register_node("kingdoms:servercorestone", {
     end,
 
     on_destruct = function(pos)
+        kingdoms.db.corestones[minetest.pos_to_string(pos)] = nil
         kingdoms.db.servercorestone = nil
     end,
 

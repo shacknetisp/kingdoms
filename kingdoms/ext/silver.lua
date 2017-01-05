@@ -68,7 +68,20 @@ minetest.register_craftitem("kingdoms:silver_lump", {
 minetest.register_craftitem("kingdoms:silver_ingot", {
     description = "Silver Ingot",
     inventory_image = "kingdoms_silver_ingot.png",
-    groups = {spellbinding = 1},
+    groups = {spellbinding = 1, minor_spellbinding = 1},
+})
+
+minetest.register_craftitem("kingdoms:silver_shard", {
+    description = "Silver Shard",
+    inventory_image = "kingdoms_silver_shard.png",
+    groups = {minor_spellbinding = 1},
+})
+
+minetest.register_craft({
+    output = 'kingdoms:silver_shard 9',
+    recipe = {
+        {'kingdoms:silver_ingot'},
+    }
 })
 
 minetest.register_craft({
@@ -84,6 +97,15 @@ minetest.register_craft({
     output = 'kingdoms:silver_ingot 9',
     recipe = {
         {'kingdoms:silverblock'},
+    }
+})
+
+minetest.register_craft({
+    output = 'kingdoms:silver_ingot',
+    recipe = {
+        {'kingdoms:silver_shard', 'kingdoms:silver_shard', 'kingdoms:silver_shard'},
+        {'kingdoms:silver_shard', 'kingdoms:silver_shard', 'kingdoms:silver_shard'},
+        {'kingdoms:silver_shard', 'kingdoms:silver_shard', 'kingdoms:silver_shard'},
     }
 })
 

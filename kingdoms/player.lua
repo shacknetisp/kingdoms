@@ -37,4 +37,5 @@ local function respawn(player)
     return false
 end
 
+minetest.register_on_newplayer(respawn)
 minetest.register_on_respawnplayer(respawn)

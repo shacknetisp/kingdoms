@@ -27,7 +27,7 @@ for level = 1, kingdoms.config.materialized_levels do
     minetest.register_node("kingdoms:materialized_wall_"..tostring(level), {
         description = "Materializer Wall Level "..tostring(level),
         drawtype = "nodebox",
-        tiles = {"kingdoms_materialized.png"},
+        tiles = (last and {"kingdoms_materialized_final.png"} or {"kingdoms_materialized.png"}),
         sounds = default.node_sound_stone_defaults(),
         -- Only include the first and last in the creative inventory.
         groups = {cracky = 1, level = 2, not_in_creative_inventory = ((first or last) and 0 or 1), kingdoms_materialized_up=(last and 0 or 1)},

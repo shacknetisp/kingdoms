@@ -67,8 +67,13 @@ domodfile("barriers.lua")
 -- Overrides of default to support kingdoms.
 domodfile("ext/chests.lua")
 domodfile("ext/furnace.lua")
+-- Silver without moreores.
+domodfile("ext/silver.lua")
 
 domodfile("crafts.lua")
+
+-- 3d_armor
+ARMOR_HEAL_MULTIPLIER = 0
 
 -- All done!
 kingdoms.log("action", "Completely loaded.")

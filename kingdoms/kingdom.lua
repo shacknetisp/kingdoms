@@ -71,6 +71,7 @@ local kcommand = {
         return true
     end
 }
+kingdoms.show_main_formspec = kcommand.func
 minetest.register_chatcommand("k", kcommand)
 minetest.register_chatcommand("kingdoms", kcommand)
 
@@ -88,11 +89,11 @@ end
 local function leave_kingdom(name)
     local kingdom = kingdoms.player.kingdom(name)
     local level = kingdoms.player.kingdom_state(name).level
-    
+
     kingdom.memberlist = kingdoms.utils.filteri(kingdom.memberlist, function(v) return v ~= name end)
     kingdom.members[name] = nil
     kingdoms.db.players[name] = nil
-    
+
     -- If there are no members, then the kingdom is disbanded.
     if #kingdom.memberlist == 0 then
         kingdoms.db.invitations = kingdoms.utils.filteri(kingdoms.db.invitations, function(v) return v.kingdom ~= kingdom.id end)
@@ -101,7 +102,7 @@ local function leave_kingdom(name)
         minetest.chat_send_player(name, ("%s has been disbanded."):format(kingdom.longname))
         return
     end
-    
+
     -- If this was the level 100 member, choose a new level 100 member from the highest-level member available. If there are two or more, choose the one who joined first.
     -- Level 100s can choose their successor by reserving level 99 for that purpose.
     if level == kingdoms.config.maxlevel then
@@ -142,9 +143,9 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
             joined = os.time(),
         }
         table.insert(kingdom.memberlist, name)
-        
+
         clear_invitations(name)
-        
+
         kingdoms.log("action", ("'%s' has joined '%s'."):format(name, kingdom.longname))
         minetest.chat_send_player(name, "You are now a member of "..kingdom.longname)
         return kcommand.func(name)
@@ -161,7 +162,7 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
             minetest.chat_send_player(name, "That name is too long.")
             return true
         end
-        
+
         local kingdom = {
             id = kingdoms.utils.uniqueid(),
             longname = formattedname,
@@ -185,9 +186,9 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
                 return true
             end
         end
-        
+
         clear_invitations(name)
-        
+
         kingdoms.db.players[name] = kingdom.id
         kingdom.members[name] = {
             name = name,
@@ -353,7 +354,7 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
     if formname ~= "kingdoms:levels" then return false end
     local name = player:get_player_name()
     local kingdom = kingdoms.player.kingdom(name)
-    
+
     if fields.levels then
         formspec_levels.selected[name] = formspec_levels.possible[minetest.explode_textlist_event(fields.levels).index]
         if not kingdoms.player.can(name, "set_levels") then
@@ -376,12 +377,12 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
     local level = formspec_levels.selected[name]
     local oldvalue = kingdom.levels[level]
     local value = tonumber(fields.value)
-    
+
     if fields.go then
         if oldvalue == value then
             return formspec_levels.func(name)
         end
-        
+
         if not kingdoms.player.can(name, "set_levels") then
             minetest.chat_send_player(name, "You do not have sufficient level to set levels.")
             return formspec_levels.func(name)
@@ -430,7 +431,7 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
     if formname ~= "kingdoms:info" then return false end
     local name = player:get_player_name()
     local kingdom = kingdoms.player.kingdom(name)
-    
+
     if fields.save then
         if not kingdoms.player.can(name, "set_info") then
             return true

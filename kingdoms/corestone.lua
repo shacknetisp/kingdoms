@@ -332,6 +332,14 @@ minetest.register_node("kingdoms:servercorestone", {
     on_destruct = function(pos)
         kingdoms.db.servercorestone = nil
     end,
+
+    on_rightclick = function(pos, node, clicker)
+        minetest.show_formspec(clicker:get_player_name(), "kingdoms:kingdoms_info",
+            "size[6,6]"
+            .."textarea[0.4,0.25;5.75,6.75;info;Info;"..minetest.formspec_escape(
+[[This is some help text.]]).."]"
+        )
+    end,
 })
 
 minetest.register_abm{

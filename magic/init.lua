@@ -7,4 +7,8 @@ end
 -- Mod namespace.
 magic = {}
 
+domodfile("crystals.lua")
+domodfile("spells.lua")
+domodfile("crafts.lua")
+
 kingdoms.log("action", "Magic loaded.")

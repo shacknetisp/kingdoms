@@ -17,6 +17,8 @@ local items = kingdoms.utils.probability_list({
     ["default:goldblock"] = 2,
     ["default:copperblock"] = 2,
 
+    ["kingdoms:silverblock"] = 3,
+
     ["default:bronzeblock"] = 3,
     ["default:steelblock"] = 3,
 

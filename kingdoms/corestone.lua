@@ -37,7 +37,7 @@ function kingdoms.can_dig(r, pos, name)
             end
             return false
         end
-        if not kingdoms.player.can(name, "build") then
+        if not kingdoms.player.can(name, "build") and kingdoms.db.kingdoms[kid] then
             if kingdoms.show_protection_messages then
                 minetest.chat_send_player(name, "You are not of a sufficient level to build here.")
             end

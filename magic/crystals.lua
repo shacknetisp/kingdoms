@@ -92,7 +92,7 @@ minetest.register_craftitem("magic:null_essence", {
     inventory_image = "magic_essence.png",
 })
 
-for _,def in ipairs(magic.crystals) do
+function magic.register_crystal(def, craft)
     minetest.register_node("magic:crystal_"..def.name, {
         description = def.desc.." Crystal",
         drawtype = "glasslike",
@@ -163,4 +163,12 @@ for _,def in ipairs(magic.crystals) do
             minetest.register_ore(ndef)
         end
     end
+
+    if craft then
+        magic.register_crystal_craft(def)
+    end
+end
+
+for _,def in ipairs(magic.crystals) do
+    magic.register_crystal(def, true)
 end

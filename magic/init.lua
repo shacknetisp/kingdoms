@@ -22,9 +22,9 @@ minetest.override_item("default:mese", {
         groups = {cracky = 1, level = 2, major_spellbinding = 1},
 })
 
+domodfile("crafts.lua")
 domodfile("crystals.lua")
 domodfile("spells.lua")
-domodfile("crafts.lua")
 domodfile("timegens.lua")
 domodfile("mapgen.lua")
 

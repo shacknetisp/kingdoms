@@ -1,4 +1,4 @@
-for _,def in ipairs(magic.crystals) do
+function magic.register_crystal_craft(def)
     minetest.register_craft({
         type = "cooking",
         output = "magic:"..def.name.."_essence",

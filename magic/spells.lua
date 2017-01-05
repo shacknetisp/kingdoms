@@ -4,22 +4,19 @@ function magic.register_spell(name, def)
         inventory_image = "magic_essence.png^[colorize:"..def.color..":"..tostring(0xCC).."^magic_emblem_"..def.emblem..".png",
         groups = def.groups or {spell = 1},
     }
+    local function docost(player)
+        -- If the spell is harmful, it will dip into player health when mana runs out.
+        if def.harmful then
+            return magic.require_energy(player, def.cost, true)
+        else
+            return magic.require_mana(player, def.cost, true)
+        end
+    end
     if def.type == "missile" then
-        magic.register_missile(name.."_missile", item_def.inventory_image, def)
-        item_def.on_use = function(itemstack, player, pointed_thing)
-            local playerpos = player:getpos()
-            local obj = minetest.add_entity({x=playerpos.x,y=playerpos.y+1.4,z=playerpos.z}, name.."_missile")
-            local dir = player:get_look_dir()
-            obj:setvelocity({x=dir.x*def.speed, y=dir.y*def.speed, z=dir.z*def.speed})
-            obj:setacceleration({x=dir.x*-3, y=-8.5*def.gravity, z=dir.z*-3})
-            obj:setyaw(player:get_look_yaw()+math.pi)
-            if obj:get_luaentity() then
-                obj:get_luaentity().player = player
-            else
-                obj:remove()
-            end
-            itemstack:take_item()
-            return itemstack
+        local f = magic.register_missile(name.."_missile", item_def.inventory_image, def, item_def)
+        function item_def.on_use(itemstack, player, pointed_thing)
+            if not docost(player) then return end
+            return f(itemstack, player, pointed_thing)
         end
     else
         error("Unknown spell type: "..def.type)
@@ -32,9 +29,14 @@ magic.register_spell("magic:spell_fire", {
     color = "#F00",
     emblem = "attack",
     speed = 30,
-    gravity = 0,
+    cost = 1,
     hit_node = function(self, pos, last_empty_pos)
         local flammable = minetest.get_item_group(minetest.get_node(pos).name, "flammable")
+        local puts_out = minetest.get_item_group(minetest.get_node(pos).name, "puts_out_fire")
+        if puts_out > 0 then
+            -- No chance of a fire starting here.
+            return true
+        end
         if flammable > 0 then
             minetest.set_node(pos, {name = "fire:basic_flame"})
             return true

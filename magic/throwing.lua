@@ -8,7 +8,7 @@ local safe_ents = {
 
 local TIMEOUT = 300
 
--- COPIED FROM technic, under LGPL v2
+-- ORIGINALLY COPIED FROM technic, under LGPL v2
 -- BEGIN COPIED
 local scalar = vector.scalar or vector.dot or function(v1, v2)
 	return v1.x*v2.x + v1.y*v2.y + v1.z*v2.z
@@ -62,7 +62,7 @@ local function rayIter(pos, dir, range)
 end
 -- END COPIED
 
-function magic.register_missile(name, texture, def)
+function magic.register_missile(name, texture, def, item_def)
 
     def.hit_object = def.hit_object or function(self, pos, obj)
         return true
@@ -83,6 +83,7 @@ function magic.register_missile(name, texture, def)
     local ent_def = {
             physical = false,
             timer=0,
+            particletimer = 0,
             visual = "sprite",
             visual_size = {x=0.4, y=0.4},
             textures = {texture},
@@ -93,6 +94,7 @@ function magic.register_missile(name, texture, def)
 
     ent_def.on_step = function(self, dtime)
             self.timer=self.timer+dtime
+            self.particletimer = self.particletimer + dtime
             local pos = self.object:getpos()
             if self.lastpos.x == nil then
                 self.lastpos = pos
@@ -216,6 +218,7 @@ function magic.register_missile(name, texture, def)
                     self.lastair = pos
                 else
                     hitnode = pos
+                    break
                 end
             end
 
@@ -224,8 +227,37 @@ function magic.register_missile(name, texture, def)
                     self.object:remove()
                 end
             end
+
+            if self.particletimer > 0.05 then
+                minetest.add_particle({
+                    pos = pos,
+                    velocity = {x=math.random()-0.5, y=math.random()-0.5, z=math.random()-0.5},
+                    acceleration = {x=0, y=-1, z=0},
+                    expirationtime = 1.5,
+                    size = math.random() * 4,
+                    texture = "smoke_puff.png^[transform" .. math.random(0, 7),
+                })
+                self.particletimer = 0
+            end
+
             self.lastpos={x=pos.x, y=pos.y, z=pos.z}
     end
 
     minetest.register_entity(name, ent_def)
+
+    return function(itemstack, player, pointed_thing)
+        local playerpos = player:getpos()
+        local obj = minetest.add_entity({x=playerpos.x,y=playerpos.y+1.4,z=playerpos.z}, name)
+        local dir = player:get_look_dir()
+        obj:setvelocity({x=dir.x*def.speed, y=dir.y*def.speed, z=dir.z*def.speed})
+        obj:setacceleration({x=dir.x*-3, y=-8.5*(def.gravity or 0), z=dir.z*-3})
+        obj:setyaw(player:get_look_yaw()+math.pi)
+        if obj:get_luaentity() then
+            obj:get_luaentity().player = player
+        else
+            obj:remove()
+        end
+        itemstack:take_item()
+        return itemstack
+    end
 end

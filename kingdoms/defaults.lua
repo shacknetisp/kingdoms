@@ -48,3 +48,6 @@ kingdoms.config.materialized_levels = 4
 -- Materializer ABM settings.
 kingdoms.config.materialized_abm_interval = 30
 kingdoms.config.materialized_abm_chance = 2
+
+-- Magic
+kingdoms.config.max_mana = 10

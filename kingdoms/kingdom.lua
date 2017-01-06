@@ -75,6 +75,20 @@ kingdoms.show_main_formspec = kcommand.func
 minetest.register_chatcommand("k", kcommand)
 minetest.register_chatcommand("kingdoms", kcommand)
 
+-- Generate a dynamic list of default level names.
+function kingdoms.possible_levels()
+    local ret = {}
+    for k,v in kingdoms.utils.spairs(kingdoms.config._defaults, function(t, a, b)
+            return (t[a] == t[b]) and (a < b) or ((tonumber(t[a]) or 0) > (tonumber(t[b]) or 0))
+        end) do
+        local value = string.match(k, "default_level_(.*)")
+        if value then
+            table.insert(ret, value)
+        end
+    end
+    return ret
+end
+
 local function clear_invitations(name)
     if not kingdoms.db.invitations[name] then return end
     for _,i in ipairs(kingdoms.db.invitations[name]) do

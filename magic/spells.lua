@@ -36,6 +36,10 @@ function magic.damage_obj(obj, groups)
         x = x + (v / factor)
     end
     obj:punch(obj, 1.0, {full_punch_interval=1.0, damage_groups={fleshy=x}, nil})
+    -- Magic damage has a chance to drain mana (or deal extra damage if the target doesn't have enough mana).
+    if obj:is_player() and groups.magic and groups.magic > 0 then
+        magic.require_energy(obj, math.random(0, math.max(1, math.ceil(groups.magic / 3))))
+    end
 end
 
 -- The fireball, ignites flames and deals fire damage.
@@ -64,10 +68,6 @@ magic.register_spell("magic:spell_fire", {
     end,
     hit_object = function(self, pos, obj)
         magic.damage_obj(obj, {fire = 4})
-        return true
-    end,
-    hit_player = function(self, pos, obj)
-        magic.damage_obj(obj, {fire=4})
         return true
     end,
 })
@@ -120,17 +120,13 @@ end
 
 -- A weak but cheap dart.
 magic.register_spell("magic:spell_dart", {
-    description = "Dart",
+    description = "Dart Spell",
     type = "missile",
     color = "#333",
     emblem = "attack",
     speed = 60,
     cost = 1,
     hit_object = function(self, pos, obj)
-        magic.damage_obj(obj, {fleshy = 2})
-        return true
-    end,
-    hit_player = function(self, pos, obj)
         magic.damage_obj(obj, {fleshy = 2})
         return true
     end,
@@ -145,17 +141,13 @@ minetest.register_craft({
 
 -- A weak dart that deals armor-bypassing magic and fire damage.
 magic.register_spell("magic:spell_missile", {
-    description = "Missile",
+    description = "Missile Spell",
     type = "missile",
-    color = "#00F",
+    color = "#04F",
     emblem = "attack",
     speed = 50,
     cost = 1,
     hit_object = function(self, pos, obj)
-        magic.damage_obj(obj, {magic = 1, fire = 1})
-        return true
-    end,
-    hit_player = function(self, pos, obj)
         magic.damage_obj(obj, {magic = 1, fire = 1})
         return true
     end,
@@ -164,5 +156,46 @@ minetest.register_craft({
     output = "magic:spell_missile 2",
     recipe = {
         {"magic:rage_essence", "magic:day_essence", "group:minor_spellbinding"},
+    },
+})
+
+-- Create a small explosion of flowing water.
+local function drop_water(self, pos)
+    local water = "default:water_flowing"
+    local limit = 12
+    local positions = kingdoms.utils.shuffled(kingdoms.utils.find_nodes_by_area(pos, 3, {"fire:basic_flame"}))
+    for _,p in ipairs(positions) do
+        limit = limit - 1
+        minetest.set_node(p, {name=water})
+        if limit <= 0 then
+            break
+        end
+    end
+    positions = kingdoms.utils.shuffled(kingdoms.utils.find_nodes_by_area(pos, 1, {"air"}))
+    for _,p in ipairs(positions) do
+        limit = limit - 1
+        minetest.set_node(p, {name=water})
+        if limit <= 0 then
+            break
+        end
+    end
+    return true
+end
+
+magic.register_spell("magic:spell_water", {
+    description = "Water Spell",
+    type = "missile",
+    color = "#00F",
+    emblem = "action",
+    speed = 20,
+    cost = 4,
+    gravity = 0.25,
+    hit_node = drop_water,
+    hit_object = drop_water,
+})
+minetest.register_craft({
+    output = "magic:spell_water 2",
+    recipe = {
+        {"magic:calm_essence", "group:minor_spellbinding", "magic:area_essence"},
     },
 })

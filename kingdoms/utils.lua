@@ -64,3 +64,18 @@ function kingdoms.utils.probability_list(t)
     end
     return ret
 end
+
+function kingdoms.utils.find_nodes_by_area(pos, r, names)
+    return minetest.find_nodes_in_area({x = pos.x - r, y = pos.y - r, z = pos.z - r}, {x = pos.x + r, y = pos.y + r, z = pos.z + r}, names)
+end
+
+function kingdoms.utils.shuffled(t_in)
+    local t = table.copy(t_in)
+    local ret = {}
+    while #t > 0 do
+        local index = math.random(1, #t)
+        table.insert(ret, t[index])
+        table.remove(t, index)
+    end
+    return ret
+end

@@ -92,6 +92,7 @@ magic.crystals = {
         desc = "Night",
         color = "#000",
         light = 0,
+        nodefgen = true,
         ores = {
             {
                 rarity = 15 * 15 * 15,
@@ -122,7 +123,7 @@ function magic.register_crystal(def, nocraft)
         sounds = default.node_sound_stone_defaults(),
     })
 
-    minetest.after(0.01, function() kingdoms.register_dungeon_node("magic:crystal_"..def.name, 3 / #magic.crystals) end)
+    kingdoms.at_mod_load("kingdoms", function() kingdoms.register_dungeon_node("magic:crystal_"..def.name, 3 / #magic.crystals) end)
 
     minetest.register_craftitem("magic:"..def.name.."_essence", {
         description = def.desc.." Essence",

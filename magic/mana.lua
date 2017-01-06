@@ -2,9 +2,10 @@ magic.manadb = {}
 local huds = {}
 local timer = 0
 
-minetest.after(0, function()
-    kingdoms.db.magic_mana = kingdoms.db.magic_mana or {}
-    magic.manadb = kingdoms.db.magic_mana
+kingdoms.at_mod_load("kingdoms", function()
+    kingdoms.db.magic = kingdoms.db.magic or {}
+    kingdoms.db.magic.mana = kingdoms.db.magic.mana or {}
+    magic.manadb = kingdoms.db.magic.mana
 end)
 
 minetest.register_globalstep(function(dtime)
@@ -17,7 +18,7 @@ minetest.register_globalstep(function(dtime)
         local p = magic.manadb[name]
         p.timer = p.timer + dtime
         if p.timer > 6 then
-            p.mana = math.min(p.max_mana, p.mana + (p.timer / 6))
+            p.mana = math.min(p.max_mana, p.mana + (p.timer / 6) * (player:get_hp() >= 18 and 2 or 1 ))
             p.timer = 0
         end
         local hud = huds[name]
@@ -58,8 +59,9 @@ end
 function magic.require_energy(player, cost, message)
     local p = magic.manadb[player:get_player_name()]
     if not p then return false end
-    local didmana = magic.require_mana(player, cost)
-    if didmana then return true end
+    if magic.require_mana(player, cost) then
+        return true
+    end
     if player:get_hp() <= cost then
         if message then minetest.chat_send_player(player:get_player_name(), "You do not have enough health.") end
         return false
@@ -70,10 +72,10 @@ end
 
 minetest.register_on_joinplayer(function(player)
     magic.manadb[player:get_player_name()] = magic.manadb[player:get_player_name()] or {
-        mana = kingdoms.config.max_mana,
+        mana = magic.config.max_mana,
         timer = 0,
     }
-    magic.manadb[player:get_player_name()].max_mana = kingdoms.config.max_mana
+    magic.manadb[player:get_player_name()].max_mana = magic.config.max_mana
 end)
 minetest.register_on_leaveplayer(function(player)
     huds[player:get_player_name()] = nil

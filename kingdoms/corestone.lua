@@ -50,10 +50,7 @@ end
 function kingdoms.check_claimward(r, pos, name)
     if not name or not pos then return false end
     local kingdom = kingdoms.player.kingdom(name)
-    local positions = minetest.find_nodes_in_area(
-        {x = pos.x - r, y = pos.y - r, z = pos.z - r},
-        {x = pos.x + r, y = pos.y + r, z = pos.z + r},
-        {"kingdoms:claimward"})
+    local positions = kingdoms.utils.find_nodes_by_area(pos, r, {"kingdoms:claimward"})
     for _, pos in ipairs(positions) do
         local nodename = minetest.get_node(pos).name
         local meta = minetest.get_meta(pos)

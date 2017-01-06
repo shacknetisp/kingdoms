@@ -7,9 +7,9 @@ end
 -- Mod namespace.
 magic = {}
 
-function magic.log(level, message)
-    minetest.log(level, "[magic] "..message)
-end
+magic.config = kingdoms.config_table("magic")
+magic.log = kingdoms.log_function("magic")
+domodfile("defaults.lua")
 
 local mese_mesecons = rawget(_G, "mesecon") and {conductor = {
     state = mesecon.state.off,
@@ -23,11 +23,14 @@ minetest.override_item("default:mese", {
 })
 
 domodfile("mana.lua")
-domodfile("crafts.lua")
-domodfile("crystals.lua")
 domodfile("throwing.lua")
-domodfile("spells.lua")
-domodfile("timegens.lua")
 domodfile("mapgen.lua")
 
+domodfile("crafts.lua")
+
+domodfile("timegens.lua")
+domodfile("crystals.lua")
+domodfile("spells.lua")
+
 magic.log("action", "Loaded.")
+kingdoms.mod_ready("magic")

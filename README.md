@@ -29,4 +29,4 @@ All locked/owned items should be replaced with tests for kingdom levels or is_pr
 * unified_inventory is hooked into with a kingdoms button.
 
 * Most hunger mods will work, the mana bar from magic is placed above the usual hunger bar location.
-* Most mob mods will be compatible with magic's damage system.
+* Most mob mods will be compatible with magic's damage system. Mobs such as Dungeon Masters should not deal direct damage to nodes, but channel their destruction through the included tnt mod.

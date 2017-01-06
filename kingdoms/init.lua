@@ -4,15 +4,8 @@ local function domodfile(f)
     dofile(modpath .. '/' .. f)
 end
 
--- Mod namespace.
-kingdoms = {}
-
-function kingdoms.log(level, message)
-    minetest.log(level, "[kingdoms] "..message)
-end
-
--- Initial configuration files.
-domodfile("config.lua")
+kingdoms.config = kingdoms.config_table("kingdoms")
+kingdoms.log = kingdoms.log_function("kingdoms")
 domodfile("defaults.lua")
 
 -- Persistent database.
@@ -79,3 +72,4 @@ ARMOR_HEAL_MULTIPLIER = 0
 kingdoms.log("action", "Completely loaded.")
 kingdoms.log("action", "Number of kingdoms in the database: "..tostring(kingdoms.utils.table_len(kingdoms.db.kingdoms)))
 kingdoms.log("action", "Number of players in kingdoms: "..tostring(kingdoms.utils.table_len(kingdoms.db.players)))
+kingdoms.mod_ready("kingdoms")

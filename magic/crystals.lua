@@ -123,7 +123,20 @@ function magic.register_crystal(def, nocraft)
         sounds = default.node_sound_stone_defaults(),
     })
 
-    kingdoms.at_mod_load("kingdoms", function() kingdoms.register_dungeon_node("magic:crystal_"..def.name, 3 / #magic.crystals) end)
+    minetest.register_node("magic:concentrated_crystal_"..def.name, {
+        description = "Compressed "..def.desc.." Crystal",
+        tiles = {"magic_concentrated_crystal.png^[colorize:"..def.color..":"..tostring(0xCC)},
+        is_ground_content = false,
+        drawtype = "glasslike",
+        light_source = def.light or 7,
+        sunlight_propagates = true,
+        use_texture_alpha = true,
+        paramtype = "light",
+        groups = {cracky = 2, not_in_creative_inventory = (def.hidecrystal and 1 or 0)},
+        sounds = default.node_sound_stone_defaults(),
+    })
+
+    kingdoms.at_mod_load("kingdoms", function() kingdoms.register_dungeon_node("magic:concentrated_crystal_"..def.name, 4 / #magic.crystals) end)
 
     minetest.register_craftitem("magic:"..def.name.."_essence", {
         description = def.desc.." Essence",

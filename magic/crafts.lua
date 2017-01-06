@@ -5,16 +5,39 @@ function magic.register_crystal_craft(def)
         recipe = "magic:crystal_"..def.name,
         cooktime = 6,
     })
+
     minetest.register_craft({
         type = "shapeless",
         output = "magic:crystal_"..def.name,
         recipe = {"magic:"..def.name.."_essence", "group:spellbinding", "group:stone"}
+    })
+
+
+    minetest.register_craft({
+        type = "shapeless",
+        output = "magic:"..def.name.."_essence 3",
+        recipe = {"magic:concentrated_"..def.name.."_essence"}
     })
     minetest.register_craft({
         type = "shapeless",
         output = "magic:concentrated_"..def.name.."_essence",
         recipe = {"magic:"..def.name.."_essence", "magic:"..def.name.."_essence", "magic:"..def.name.."_essence"}
     })
+
+    minetest.register_craft({
+        type = "shapeless",
+        output = "magic:crystal_"..def.name.." 9",
+        recipe = {"magic:concentrated_crystal_"..def.name}
+    })
+    minetest.register_craft({
+        output = "magic:concentrated_crystal_"..def.name,
+        recipe = {
+            {"magic:crystal_"..def.name, "magic:crystal_"..def.name, "magic:crystal_"..def.name},
+            {"magic:crystal_"..def.name, "magic:crystal_"..def.name, "magic:crystal_"..def.name},
+            {"magic:crystal_"..def.name, "magic:crystal_"..def.name, "magic:crystal_"..def.name},
+        },
+    })
+
     if def.fuel then
         minetest.register_craft({
             type = "fuel",

@@ -51,3 +51,15 @@ kingdoms.config.materialized_levels = 4
 -- Materializer ABM settings.
 kingdoms.config.materialized_abm_interval = 30
 kingdoms.config.materialized_abm_chance = 2
+
+-- Corestone score regeneration per second.
+kingdoms.config.corestone_score_regen = 5
+-- Maximum corestone score.
+kingdoms.config.corestone_score_max = (60 * 60 * 24) * 10
+-- Corestone score required to place a corestone.
+kingdoms.config.corestone_score_threshold = kingdoms.config.corestone_score_max / 10
+-- Damage per second of a Disruptor.
+kingdoms.config.disruptor_damage = 1
+-- Disruptor ABM settings.
+kingdoms.config.disruptor_interval = 5
+kingdoms.config.disruptor_chance = 2

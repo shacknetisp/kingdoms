@@ -45,6 +45,7 @@ local kcommand = {
                     ..kingdoms.utils.s("day", math.floor((os.time() - kingdom.created) / 60 / 60 / 24))
                     .." days | Corestone: "..minetest.formspec_escape(kingdom.corestone.pos and minetest.pos_to_string(kingdom.corestone.pos) or "N/A")
                     ..minetest.formspec_escape("\n")..kingdoms.utils.s("member", #kingdom.memberlist)
+                    .." | Corestone score: "..tostring(math.ceil((kingdom.corestone.score / kingdoms.config.corestone_score_max) * 1000) / 10).."%"
                     .."]"
                 .."textlist[0,1.5;4,4;members;"..membersstring.."]"
                 .."label[4.5,0;Kingdom Menu]"
@@ -74,6 +75,16 @@ local kcommand = {
 kingdoms.show_main_formspec = kcommand.func
 minetest.register_chatcommand("k", kcommand)
 minetest.register_chatcommand("kingdoms", kcommand)
+
+function kingdoms.corestone_change(kingdom, delta)
+    kingdom.corestone.score = kingdom.corestone.score + delta
+    kingdom.corestone.score = math.min(kingdoms.config.corestone_score_max, kingdom.corestone.score)
+    kingdom.corestone.score = math.max(0, kingdom.corestone.score)
+    if kingdom.corestone.score == 0 and kingdom.corestone.pos then
+        kingdoms.log("action", "Corestone removed due to 0 score:")
+        minetest.remove_node(kingdom.corestone.pos)
+    end
+end
 
 -- Generate a dynamic list of default level names.
 function kingdoms.possible_levels()
@@ -188,6 +199,7 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
             corestone = {
                 placed = 0,
                 dug = 0,
+                score = kingdoms.config.corestone_score_max,
             },
         }
         for _,k in pairs(kingdoms.db.kingdoms) do

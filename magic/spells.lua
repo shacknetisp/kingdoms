@@ -163,6 +163,7 @@ minetest.register_craft({
 local function drop_water(self, pos)
     local water = "default:water_flowing"
     local limit = 12
+    -- Put out fires first.
     local positions = kingdoms.utils.shuffled(kingdoms.utils.find_nodes_by_area(pos, 3, {"fire:basic_flame"}))
     for _,p in ipairs(positions) do
         limit = limit - 1
@@ -171,6 +172,7 @@ local function drop_water(self, pos)
             break
         end
     end
+    -- A smaller air radius, avoiding travel through thick walls.
     positions = kingdoms.utils.shuffled(kingdoms.utils.find_nodes_by_area(pos, 1, {"air"}))
     for _,p in ipairs(positions) do
         limit = limit - 1

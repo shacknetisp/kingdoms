@@ -8,7 +8,7 @@ minetest.register_node("magic:nightcall", {
         meta:get_inventory():set_size("output", 6)
         meta:set_string("formspec", [[
             size[8,7]
-            label[0,0.1;Input null essences during the night to produce night essences.]
+            label[0,0.1;Input null essences during the night to produce night essences. Requires mana.]
             list[context;input;0,1;1,1;]
             list[context;output;2,1;6,1;]
             list[current_player;main;0,3;8,4;]
@@ -37,6 +37,9 @@ minetest.register_node("magic:nightcall", {
             minetest.chat_send_player(player:get_player_name(), "It is not night.")
             return 0
         end
+        if not magic.require_mana(player, stack:get_count() / 10, true) then
+            return 0
+        end
         return stack:get_count()
     end,
     allow_metadata_inventory_take = function(pos, listname, index, stack, player)
@@ -58,7 +61,7 @@ minetest.register_node("magic:daypull", {
         meta:get_inventory():set_size("output", 6)
         meta:set_string("formspec", [[
             size[8,7]
-            label[0,0.1;Input null essences during the day to produce day essences.]
+            label[0,0.1;Input null essences during the day to produce day essences. Requires mana.]
             list[context;input;0,1;1,1;]
             list[context;output;2,1;6,1;]
             list[current_player;main;0,3;8,4;]
@@ -85,6 +88,9 @@ minetest.register_node("magic:daypull", {
         end
         if tod < 0.2 or tod > 0.805 then
             minetest.chat_send_player(player:get_player_name(), "It is not day.")
+            return 0
+        end
+        if not magic.require_mana(player, stack:get_count() / 10, true) then
             return 0
         end
         return stack:get_count()

@@ -134,7 +134,7 @@ minetest.register_node("kingdoms:corestone", {
     groups = {oddly_breakable_by_hand = 2, unbreakable = 1, kingdom_infotext = 1},
     is_ground_content = false,
     paramtype = "light",
-    light_source = 0,
+    light_source = 2,
 
     node_box = {
         type = "fixed",
@@ -160,6 +160,11 @@ minetest.register_node("kingdoms:corestone", {
 
         if kingdom.corestone.pos then
             minetest.chat_send_player(placer:get_player_name(), "You cannot place a corestone if the kingdom already has a corestone placed.")
+            return itemstack
+        end
+
+        if kingdom.corestone.score < kingdoms.config.corestone_score_threshold then
+            minetest.chat_send_player(placer:get_player_name(), "You cannot place a corestone if the kingdom's corestone score is below "..tostring(math.ceil((kingdoms.config.corestone_score_threshold / kingdoms.config.corestone_score_max) * 100)).."%"..".")
             return itemstack
         end
 
@@ -230,7 +235,7 @@ minetest.register_node("kingdoms:claimward", {
     groups = {oddly_breakable_by_hand = 2, unbreakable = 1, kingdom_infotext = 1},
     is_ground_content = false,
     paramtype = "light",
-    light_source = 0,
+    light_source = 1,
 
     node_box = {
         type = "fixed",
@@ -278,7 +283,7 @@ minetest.register_node("kingdoms:servercorestone", {
     groups = {oddly_breakable_by_hand = 2, unbreakable = 1, not_in_creative_inventory = 1},
     is_ground_content = false,
     paramtype = "light",
-    light_source = 0,
+    light_source = 2,
 
     node_box = {
         type = "fixed",
@@ -352,9 +357,80 @@ minetest.register_node("kingdoms:servercorestone", {
     end,
 })
 
+minetest.register_node("kingdoms:core_disruptor", {
+    description = "Core Disruptor",
+    drawtype = "nodebox",
+    tiles = {"kingdoms_core_disruptor.png"},
+    sounds = default.node_sound_stone_defaults(),
+    groups = {oddly_breakable_by_hand = 2, unbreakable = 1},
+    is_ground_content = false,
+    paramtype = "light",
+    light_source = 1,
+
+    node_box = {
+        type = "fixed",
+        fixed = {
+            {-0.5 ,-0.5, -0.5, 0.5, 0.5, 0.5},
+        }
+    },
+
+    on_place = function(itemstack, placer, pointed_thing)
+        if not placer or pointed_thing.type ~= "node" then
+            return itemstack
+        end
+
+        local kingdom = kingdoms.player.kingdom(placer:get_player_name())
+        if not kingdom then
+            minetest.chat_send_player(placer:get_player_name(), "You cannot place a disruptor if you are not a member of a kingdom.")
+            return itemstack
+        end
+
+        return minetest.item_place(itemstack, placer, pointed_thing)
+    end,
+
+    after_place_node = function(pos, placer)
+        local kingdom = kingdoms.player.kingdom(placer:get_player_name())
+        local meta = minetest.get_meta(pos)
+        meta:set_string("kingdom.id", kingdom.id)
+    end,
+})
+
+minetest.register_abm{
+    nodenames = {"kingdoms:core_disruptor"},
+    interval = kingdoms.config.disruptor_interval,
+    chance = kingdoms.config.disruptor_chance,
+    action = function(pos, node)
+        local attacking = 0
+        local nkingdom = kingdoms.bycspos(pos)
+        if not nkingdom then
+            build_infotext(pos, "Core Disruptor")
+            return
+        end
+        local nearby = kingdoms.near_pos(kingdoms.config.corestone_radius * 1.5, pos)
+        for _,cspos in ipairs(nearby) do
+            if minetest.get_node(cspos).name == "kingdoms:corestone" then
+                local akingdom = kingdoms.bycspos(cspos)
+                if akingdom and akingdom.id ~= nkingdom.id then
+                    kingdoms.corestone_change(akingdom, -kingdoms.config.disruptor_damage * (kingdoms.config.disruptor_interval * kingdoms.config.disruptor_chance))
+                    attacking = attacking + 1
+                end
+            end
+        end
+        build_infotext(pos, (attacking > 0) and "Active Core Disruptor ("..tostring(attacking)..")" or "Core Disruptor")
+    end,
+}
+
+minetest.register_globalstep(function(dtime)
+    for _,kingdom in pairs(kingdoms.db.kingdoms) do
+        kingdoms.corestone_change(kingdom, dtime * kingdoms.config.corestone_score_regen)
+    end
+end)
+
 minetest.register_abm{
     nodenames = {"group:kingdom_infotext"},
     interval = 1,
     chance = 1,
-    action = function(pos, node) build_infotext(pos, minetest.registered_nodes[node.name].description) end,
+    action = function(pos, node)
+        build_infotext(pos, minetest.registered_nodes[node.name].description)
+    end,
 }

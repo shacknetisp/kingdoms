@@ -16,11 +16,7 @@ minetest.register_globalstep(function(dtime)
     for _, player in pairs(minetest.get_connected_players()) do
         local name = player:get_player_name()
         local p = magic.manadb[name]
-        p.timer = p.timer + dtime
-        if p.timer > 6 then
-            p.mana = math.min(p.max_mana, p.mana + (p.timer / 6) * (player:get_hp() >= 18 and 2 or 1 ))
-            p.timer = 0
-        end
+        p.mana = math.min(p.max_mana, p.mana + (dtime / magic.config.mana_regen) * (player:get_hp() >= magic.config.mana_fast_regen_threshold and magic.config.mana_fast_regen or 1 ))
         local hud = huds[name]
         if not hud then
             hud = {}
@@ -73,7 +69,6 @@ end
 minetest.register_on_joinplayer(function(player)
     magic.manadb[player:get_player_name()] = magic.manadb[player:get_player_name()] or {
         mana = magic.config.max_mana,
-        timer = 0,
     }
     magic.manadb[player:get_player_name()].max_mana = magic.config.max_mana
 end)

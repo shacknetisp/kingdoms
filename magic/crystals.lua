@@ -77,13 +77,30 @@ magic.crystals = {
         light = 15,
         fuel = 350,
         nodefgen = true,
+        ores = {
+            {
+                rarity = 15 * 15 * 15,
+                clust_num_ores = 3,
+                clust_size     = 2,
+                y_min          = 400,
+                wherein = "air"
+            },
+        },
     },
     {
         name = "night",
         desc = "Night",
         color = "#000",
         light = 0,
-        nodefgen = true,
+        ores = {
+            {
+                rarity = 15 * 15 * 15,
+                clust_num_ores = 3,
+                clust_size     = 2,
+                y_min          = 400,
+                wherein = "air"
+            },
+        },
     },
 }
 
@@ -142,10 +159,58 @@ function magic.register_crystal(def, nocraft)
     if not def.nodefgen then
         local ores = {
             {
+                rarity = 8 * 8 * 8,
+                clust_num_ores = 4,
+                clust_size     = 3,
+                y_max          = -30000,
+                y_min          = -30008,
+            },
+            {
+                rarity = 9 * 9 * 9,
+                clust_num_ores = 4,
+                clust_size     = 3,
+                y_max          = -20000,
+                y_min          = -20016,
+            },
+            {
+                rarity = 10 * 10 * 10,
+                clust_num_ores = 4,
+                clust_size     = 3,
+                y_max          = -10000,
+                y_min          = -10025,
+            },
+            {
+                rarity = 12 * 12 * 12,
+                clust_num_ores = 4,
+                clust_size     = 2,
+                y_max          = -2048,
+            },
+            {
+                rarity = 13 * 13 * 13,
+                clust_num_ores = 3,
+                clust_size     = 2,
+                y_max          = -1024,
+                y_min = -2048,
+            },
+            {
+                rarity = 14 * 14 * 14,
+                clust_num_ores = 3,
+                clust_size     = 2,
+                y_max          = -512,
+                y_min = -1024,
+            },
+            {
                 rarity = 16 * 16 * 16,
                 clust_num_ores = 3,
                 clust_size     = 2,
                 y_max          = -64,
+                y_min = -512,
+            },
+            {
+                rarity = 14 * 14 * 14,
+                clust_num_ores = 3,
+                clust_size     = 2,
+                y_min          = 32,
             },
             {
                 rarity = 14 * 14 * 14,

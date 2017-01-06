@@ -31,7 +31,7 @@ function magic.damage_obj(obj, groups)
     for k,v in pairs(groups) do
         local factor = 1
         if k ~= 'fleshy' then
-            factor = armor.fleshy / 100
+            factor = (armor.fleshy or 100) / 100
         end
         x = x + (v / factor)
     end
@@ -104,6 +104,7 @@ if rawget(_G, 'tnt') and tnt.boom then
         emblem = "attack",
         speed = 15,
         cost = 6,
+        gravity = 0.5,
         hit_node = hit_node,
         hit_object = function(self, pos, obj)
             return hit_node(self, pos)

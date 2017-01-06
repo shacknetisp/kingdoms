@@ -1,6 +1,6 @@
 function magic.register_spell(name, def)
     local item_def = {
-        description = def.description,
+        description = def.description..(" (%d)"):format(def.cost),
         inventory_image = "magic_essence.png^[colorize:"..def.color..":"..tostring(0xCC).."^magic_emblem_"..def.emblem..".png",
         groups = def.groups or {spell = 1},
     }
@@ -23,13 +23,14 @@ function magic.register_spell(name, def)
     end
     minetest.register_craftitem(name, item_def)
 end
+
 magic.register_spell("magic:spell_fire", {
     description = "Fire Spell",
     type = "missile",
     color = "#F00",
     emblem = "attack",
     speed = 30,
-    cost = 1,
+    cost = 2,
     hit_node = function(self, pos, last_empty_pos)
         local flammable = minetest.get_item_group(minetest.get_node(pos).name, "flammable")
         local puts_out = minetest.get_item_group(minetest.get_node(pos).name, "puts_out_fire")
@@ -53,3 +54,32 @@ minetest.register_craft({
         {"magic:rage_essence", "group:minor_spellbinding"},
     },
 })
+
+if rawget(_G, 'tnt') and tnt.boom then
+    magic.register_spell("magic:spell_bomb", {
+        description = "Bomb Spell",
+        type = "missile",
+        color = "#FA0",
+        emblem = "attack",
+        speed = 15,
+        cost = 6,
+        hit_node = function(self, pos, last_empty_pos)
+            local puts_out = minetest.get_item_group(minetest.get_node(pos).name, "puts_out_fire")
+            if puts_out > 0 then
+                -- This spell can travel through water.
+                return false
+            end
+            tnt.boom(pos, {
+                radius = 3,
+                damage_radius = 5,
+            })
+            return true
+        end,
+    })
+    minetest.register_craft({
+        output = "magic:spell_bomb",
+        recipe = {
+            {"magic:spell_fire", "group:minor_spellbinding", "magic:area_essence"},
+        },
+    })
+end

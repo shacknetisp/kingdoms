@@ -201,7 +201,7 @@ function magic.register_missile(name, texture, def, item_def)
                                 end
                         elseif obj:is_player() then
                             local can = true
-                            if self.timer > 0.2 or not self.player or obj:get_player_name() ~= self.player:get_player_name() then
+                            if self.timer > 0.5 or not self.player or obj:get_player_name() ~= self.player:get_player_name() then
                                 if def.hit_player(self, obj:getpos(), obj) then
                                     self.object:remove()
                                 end

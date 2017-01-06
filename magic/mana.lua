@@ -71,9 +71,9 @@ end
 minetest.register_on_joinplayer(function(player)
     magic.manadb[player:get_player_name()] = magic.manadb[player:get_player_name()] or {
         mana = kingdoms.config.max_mana,
-        max_mana = kingdoms.config.max_mana,
         timer = 0,
     }
+    magic.manadb[player:get_player_name()].max_mana = kingdoms.config.max_mana
 end)
 minetest.register_on_leaveplayer(function(player)
     huds[player:get_player_name()] = nil

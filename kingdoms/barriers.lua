@@ -30,7 +30,7 @@ for level = 1, kingdoms.config.materialized_levels do
         tiles = (last and {"kingdoms_materialized_final.png"} or {"kingdoms_materialized.png"}),
         sounds = default.node_sound_stone_defaults(),
         -- Only include the first and last in the creative inventory.
-        groups = {cracky = 1, level = 2, not_in_creative_inventory = ((first or last) and 0 or 1), kingdoms_materialized_up=(last and 0 or 1)},
+        groups = {cracky = 1, level = 2, not_in_creative_inventory = ((first or last) and 0 or 1), kingdoms_materialized_up=(last and 0 or 1), block_explosion=(first and 1 or 2)},
         is_ground_content = false,
         paramtype = "light",
         light_source = 0,
@@ -44,6 +44,13 @@ for level = 1, kingdoms.config.materialized_levels do
         },
         on_destruct = function(pos)
             if not first then
+                minetest.after(0, minetest.set_node, pos, {name="kingdoms:materialized_wall_"..tostring(level - 1)})
+            end
+        end,
+        on_blast = function(pos)
+            if first then
+                minetest.remove_node(pos)
+            else
                 minetest.after(0, minetest.set_node, pos, {name="kingdoms:materialized_wall_"..tostring(level - 1)})
             end
         end,

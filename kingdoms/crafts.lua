@@ -26,9 +26,9 @@ minetest.register_craft({
 minetest.register_craft({
 	output = "kingdoms:materialized_wall_1 9",
 	recipe = {
-		{"magic:vitality_essence"},
+		{"magic:vitality_essence", "", ""},
 		{"group:stone", "group:stone", "group:stone"},
-		{"magic:concentrated_solidity_essence"}
+		{"magic:concentrated_solidity_essence", "", ""}
 	}
 })
 minetest.register_craft({

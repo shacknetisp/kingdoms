@@ -1,6 +1,9 @@
 -- Save the database every <save_delay> seconds.
 kingdoms.config.save_delay = 10
 
+-- Set appropriate mapgen type/flags automatically?
+kingdoms.config.mapgen = true
+
 -- Maximum kingdom name length.
 kingdoms.config.max_name_length = 128
 

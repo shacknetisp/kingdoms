@@ -38,7 +38,9 @@ setmetatable(kingdoms.config, {
 -- Generate a dynamic list of default level names.
 function kingdoms.possible_levels()
     local ret = {}
-    for k,v in kingdoms.utils.spairs(kingdoms.config._defaults, function(t, a, b) return (t[a] == t[b]) and (a < b) or (t[a] > t[b]) end) do
+    for k,v in kingdoms.utils.spairs(kingdoms.config._defaults, function(t, a, b)
+            return (t[a] == t[b]) and (a < b) or ((tonumber(t[a]) or 0) > (tonumber(t[b]) or 0))
+        end) do
         local value = string.match(k, "default_level_(.*)")
         if value then
             table.insert(ret, value)

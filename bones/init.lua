@@ -27,6 +27,8 @@ bones.bones_formspec =
 local share_bones_time = tonumber(minetest.setting_get("share_bones_time")) or 1200
 local share_bones_time_early = tonumber(minetest.setting_get("share_bones_time_early")) or share_bones_time / 4
 
+local blast_items = {}
+
 minetest.register_node("bones:bones", {
     description = "Bones",
     tiles = {
@@ -43,6 +45,23 @@ minetest.register_node("bones:bones", {
         footstep = {name="default_gravel_footstep", gain=0.5},
         dug = {name="default_gravel_footstep", gain=1.0},
     }),
+
+    on_pre_blast = function(pos)
+        blast_items[minetest.pos_to_string(pos)] = {}
+        local inv = minetest.get_meta(pos):get_inventory()
+        for i=1,inv:get_size("main") do
+            local stk = inv:get_stack("main", i)
+            table.insert(blast_items[minetest.pos_to_string(pos)], stk)
+        end
+    end,
+
+    on_blast = function(pos)
+        if blast_items[minetest.pos_to_string(pos)] then
+            local c = blast_items[minetest.pos_to_string(pos)]
+            blast_items[minetest.pos_to_string(pos)] = nil
+            return c
+        end
+    end,
 
     can_dig = function(pos, player)
         local inv = minetest.get_meta(pos):get_inventory()

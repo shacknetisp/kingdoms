@@ -218,7 +218,7 @@ local function registered_nodes_by_group(group)
     return result
 end
 
-local function tnt_explode(pos, radius, ignore_protection, ignore_on_blast)
+local function tnt_explode(pos, radius, ignore_protection, ignore_on_blast, on_blast_queue)
 	local pos = vector.round(pos)
 	local vm = VoxelManip()
 	local pr = PseudoRandom(os.time())
@@ -229,7 +229,6 @@ local function tnt_explode(pos, radius, ignore_protection, ignore_on_blast)
 	local data = vm:get_data()
 
 	local drops = {}
-	local on_blast_queue = {}
 
 	local c_air = minetest.get_content_id("air")
 	local c_fire = minetest.get_content_id("fire:basic_flame")
@@ -250,6 +249,10 @@ local function tnt_explode(pos, radius, ignore_protection, ignore_on_blast)
                         local p = {x = pos.x + x, y = pos.y + y, z = pos.z + z}
 			if c_blocks[cid] then
                             blocks = blocks + minetest.get_item_group(c_blocks[cid], "block_explosion") - 1
+                            local ndef = cid_data[cid]
+                            if ndef and ndef.on_pre_blast and not def.ignore_on_blast then
+                                ndef.on_pre_blast(p)
+                            end
                             data[vi] = destroy(drops, p, cid, c_air, c_fire,
 					on_blast_queue, ignore_protection,
 					ignore_on_blast)
@@ -273,6 +276,10 @@ local function tnt_explode(pos, radius, ignore_protection, ignore_on_blast)
                             local cid = data[vi]
                             local p = {x = pos.x + x, y = pos.y + y, z = pos.z + z}
                             if cid ~= c_air then
+                                    local ndef = cid_data[cid]
+                                    if ndef and ndef.on_pre_blast and not def.ignore_on_blast then
+                                        ndef.on_pre_blast(p)
+                                    end
                                     data[vi] = destroy(drops, p, cid, c_air, c_fire,
                                             on_blast_queue, ignore_protection,
                                             ignore_on_blast)
@@ -317,11 +324,19 @@ local function tnt_explode(pos, radius, ignore_protection, ignore_on_blast)
 end
 
 function tnt.boom(pos, def)
+        local on_blast_queue = {}
+        local ndef = minetest.registered_nodes[minetest.get_node(pos).name]
+        if ndef.on_blast and not def.ignore_on_blast then
+            on_blast_queue[#on_blast_queue + 1] = {pos = vector.new(pos), on_blast = ndef.on_blast}
+        end
+        if ndef.on_pre_blast and not def.ignore_on_blast then
+            ndef.on_pre_blast(pos)
+        end
 	minetest.sound_play("tnt_explode", {pos = pos, gain = 1.5, max_hear_distance = 2*64})
 	minetest.set_node(pos, {name = "tnt:boom"})
 	minetest.get_node_timer(pos):start(0.5)
 	local drops = tnt_explode(pos, def.radius, def.ignore_protection,
-			def.ignore_on_blast)
+			def.ignore_on_blast, on_blast_queue)
 	entity_physics(pos, def.damage_radius)
 	if not def.disable_drops then
 		eject_drops(drops, pos, def.radius)

@@ -56,6 +56,18 @@ minetest.register_craft({
 })
 
 if rawget(_G, 'tnt') and tnt.boom then
+    local hit_node = function(self, pos, last_empty_pos)
+        local puts_out = minetest.get_item_group(minetest.get_node(pos).name, "puts_out_fire")
+        if puts_out > 0 then
+            -- This spell can travel through water.
+            return false
+        end
+        tnt.boom(pos, {
+            radius = 3,
+            damage_radius = 5,
+        })
+        return true
+    end
     magic.register_spell("magic:spell_bomb", {
         description = "Bomb Spell",
         type = "missile",
@@ -63,17 +75,9 @@ if rawget(_G, 'tnt') and tnt.boom then
         emblem = "attack",
         speed = 15,
         cost = 6,
-        hit_node = function(self, pos, last_empty_pos)
-            local puts_out = minetest.get_item_group(minetest.get_node(pos).name, "puts_out_fire")
-            if puts_out > 0 then
-                -- This spell can travel through water.
-                return false
-            end
-            tnt.boom(pos, {
-                radius = 3,
-                damage_radius = 5,
-            })
-            return true
+        hit_node = hit_node,
+        hit_object = function(self, pos)
+            return hit_node(self, pos)
         end,
     })
     minetest.register_craft({

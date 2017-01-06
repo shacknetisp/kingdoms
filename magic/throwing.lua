@@ -69,7 +69,7 @@ function magic.register_missile(name, texture, def, item_def)
     end
 
     def.hit_player = def.hit_player or function(self, pos, obj)
-        return true
+        return def.hit_object(self, pos, obj)
     end
 
     def.hit_node = def.hit_node or function(self, pos, last_empty_pos)

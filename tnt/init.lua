@@ -137,12 +137,14 @@ local function entity_physics(pos, radius)
 		local dist = math.max(1, vector.distance(pos, obj_pos))
 
 		if obj_vel ~= nil then
-			obj:setvelocity(calc_velocity(pos, obj_pos,
-					obj_vel, radius * 10))
+                        -- This causes serialization errors.
+			-- obj:setvelocity(calc_velocity(pos, obj_pos,obj_vel, radius * 10))
 		end
 
 		local damage = (4 / dist) * radius
-		obj:set_hp(obj:get_hp() - damage)
+                if not obj:get_luaentity() or not NO_HIT_ENTS[obj:get_luaentity().name] then
+                    magic.damage_obj(obj, {fleshy=damage/2, fire=damage/2})
+                end
 	end
 end
 

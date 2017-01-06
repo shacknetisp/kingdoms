@@ -24,6 +24,20 @@ function magic.register_spell(name, def)
     minetest.register_craftitem(name, item_def)
 end
 
+-- Convert all damage to fleshy.
+function magic.damage_obj(obj, groups)
+    local x = 0
+    local armor = obj:get_armor_groups()
+    for k,v in pairs(groups) do
+        local percent = 1
+        if k ~= 'fleshy' then
+            percent = armor.fleshy / 100
+        end
+        x = x + (v / percent)
+    end
+    obj:punch(obj, 1.0, {full_punch_interval=1.0, damage_groups={fleshy=x}, nil})
+end
+
 magic.register_spell("magic:spell_fire", {
     description = "Fire Spell",
     type = "missile",
@@ -46,6 +60,14 @@ magic.register_spell("magic:spell_fire", {
             return true
         end
         return false
+    end,
+    hit_object = function(self, pos, obj)
+        magic.damage_obj(obj, {fire = 4})
+        return true
+    end,
+    hit_player = function(self, pos, obj)
+        magic.damage_obj(obj, {fire=4})
+        return true
     end,
 })
 minetest.register_craft({
@@ -76,7 +98,7 @@ if rawget(_G, 'tnt') and tnt.boom then
         speed = 15,
         cost = 6,
         hit_node = hit_node,
-        hit_object = function(self, pos)
+        hit_object = function(self, pos, obj)
             return hit_node(self, pos)
         end,
     })

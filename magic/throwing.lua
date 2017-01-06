@@ -1,6 +1,6 @@
 -- Throwing movement physics.
 
-local safe_ents = {
+NO_HIT_ENTS = {
     ["__builtin:item"] = true,
     ["itemframes:item"] = true,
     ["xdecor:f_item"] = true,
@@ -190,11 +190,11 @@ function magic.register_missile(name, texture, def, item_def)
             for k, obj in pairs(objs) do
                     local bb = obj:get_properties().collisionbox
                     -- If bb collides with line...
-                    local b1 = vector.add(obj:getpos(), {x=bb[1], y=bb[2], z=bb[3]})
-                    local b2 = vector.add(obj:getpos(), {x=bb[4], y=bb[5], z=bb[6]})
+                    local b1 = vector.add(obj:getpos(), vector.multiply({x=bb[1], y=bb[2], z=bb[3]}, 1.5))
+                    local b2 = vector.add(obj:getpos(), vector.multiply({x=bb[4], y=bb[5], z=bb[6]}, 1.5))
                     if CheckLineBox(b1, b2, line.start, line.finish) or CheckLineNear(line, obj:getpos(), 1) then
                         if obj:get_luaentity() ~= nil then
-                                if obj:get_luaentity().name ~= name and not safe_ents[obj:get_luaentity().name] then
+                                if obj:get_luaentity().name ~= name and not NO_HIT_ENTS[obj:get_luaentity().name] then
                                     if def.hit_object(self, obj:getpos(), obj) then
                                         self.object:remove()
                                     end

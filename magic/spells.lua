@@ -3,6 +3,7 @@ function magic.register_spell(name, def)
         description = def.description..(" (%d)"):format(def.cost),
         inventory_image = "magic_essence.png^[colorize:"..def.color..":"..tostring(0xCC).."^magic_emblem_"..def.emblem..".png",
         groups = def.groups or {spell = 1},
+        original = def,
     }
     local function docost(player)
         -- If the spell is harmful, it will dip into player health when mana runs out.
@@ -18,6 +19,8 @@ function magic.register_spell(name, def)
             if not docost(player) then return end
             return f(itemstack, player, pointed_thing)
         end
+    elseif def.type == "shield" then
+        -- magic.damage_obj handles shields.
     else
         error("Unknown spell type: "..def.type)
     end
@@ -25,7 +28,32 @@ function magic.register_spell(name, def)
 end
 
 -- Convert all damage to fleshy.
-function magic.damage_obj(obj, groups)
+function magic.damage_obj(obj, g)
+    local groups = table.copy(g)
+    if obj:is_player() then
+        local heldstack = obj:get_wielded_item()
+        local def = minetest.registered_items[heldstack:get_name()]
+        local remove = false
+        if def.original.protects then
+            for k,protect in pairs(def.original.protects) do
+                if def.original.harmful then
+                    if not magic.require_energy(obj, def.original.cost) then
+                        break
+                    end
+                else
+                    if not magic.require_mana(obj, def.original.cost) then
+                        break
+                    end
+                end
+                remove = true
+                groups[k] = math.max(0, math.min(protect.max, groups[k] * protect.factor))
+            end
+        end
+        if remove then
+            heldstack:take_item()
+            obj:set_wielded_item(heldstack)
+        end
+    end
     local x = 0
     local armor = obj:get_armor_groups()
     for k,v in pairs(groups) do
@@ -33,7 +61,8 @@ function magic.damage_obj(obj, groups)
         if k ~= 'fleshy' then
             factor = (armor.fleshy or 100) / 100
         end
-        x = x + (v / factor)
+        local delta = (v / factor)
+        x = x + delta
     end
     obj:punch(obj, 1.0, {full_punch_interval=1.0, damage_groups={fleshy=x}, nil})
     -- Magic damage has a chance to drain mana (or deal extra damage if the target doesn't have enough mana).
@@ -41,203 +70,3 @@ function magic.damage_obj(obj, groups)
         magic.require_energy(obj, math.random(0, math.max(1, math.ceil(groups.magic / 3))))
     end
 end
-
--- The fireball, ignites flames and deals fire damage.
-magic.register_spell("magic:spell_fire", {
-    description = "Fire Spell",
-    type = "missile",
-    color = "#F00",
-    emblem = "attack",
-    speed = 30,
-    cost = 2,
-    hit_node = function(self, pos, last_empty_pos)
-        local flammable = minetest.get_item_group(minetest.get_node(pos).name, "flammable")
-        local puts_out = minetest.get_item_group(minetest.get_node(pos).name, "puts_out_fire")
-        if puts_out > 0 then
-            -- No chance of a fire starting here.
-            return true
-        end
-        if flammable > 0 then
-            minetest.set_node(pos, {name = "fire:basic_flame"})
-            return true
-        elseif last_empty_pos then
-            minetest.set_node(last_empty_pos, {name = "fire:basic_flame"})
-            return true
-        end
-        return false
-    end,
-    hit_object = function(self, pos, obj)
-        magic.damage_obj(obj, {fire = 4})
-        return true
-    end,
-})
-minetest.register_craft({
-    output = "magic:spell_fire",
-    recipe = {
-        {"magic:rage_essence", "group:minor_spellbinding"},
-    },
-})
-minetest.register_craft({
-    type = "fuel",
-    recipe = "magic:spell_fire",
-    burntime = 550,
-})
-
--- The bomb, creates a TNT-style explosion at the contact point.
-if rawget(_G, 'tnt') and tnt.boom then
-    local hit_node = function(self, pos, last_empty_pos)
-        local puts_out = minetest.get_item_group(minetest.get_node(pos).name, "puts_out_fire")
-        if puts_out > 0 then
-            -- This spell can travel through water.
-            return false
-        end
-        tnt.boom(pos, {
-            radius = 3,
-            damage_radius = 5,
-        })
-        return true
-    end
-    magic.register_spell("magic:spell_bomb", {
-        description = "Bomb Spell",
-        type = "missile",
-        color = "#FA0",
-        emblem = "attack",
-        speed = 15,
-        cost = 6,
-        gravity = 0.5,
-        hit_node = hit_node,
-        hit_object = function(self, pos, obj)
-            return hit_node(self, pos)
-        end,
-    })
-    minetest.register_craft({
-        output = "magic:spell_bomb",
-        recipe = {
-            {"magic:spell_fire", "group:minor_spellbinding", "magic:area_essence"},
-        },
-    })
-end
-
--- A weak but cheap dart.
-magic.register_spell("magic:spell_dart", {
-    description = "Dart Spell",
-    type = "missile",
-    color = "#333",
-    emblem = "attack",
-    speed = 60,
-    cost = 1,
-    hit_object = function(self, pos, obj)
-        magic.damage_obj(obj, {fleshy = 2})
-        return true
-    end,
-})
-minetest.register_craft({
-    output = "magic:spell_dart 6",
-    recipe = {
-        {"magic:area_essence", "magic:solidity_essence"},
-        {"group:minor_spellbinding", "group:stone"},
-    },
-})
-
--- A weak dart that deals armor-bypassing magic and fire damage.
-magic.register_spell("magic:spell_missile", {
-    description = "Missile Spell",
-    type = "missile",
-    color = "#04F",
-    emblem = "attack",
-    speed = 50,
-    cost = 1,
-    hit_object = function(self, pos, obj)
-        magic.damage_obj(obj, {magic = 1, fire = 1})
-        return true
-    end,
-})
-minetest.register_craft({
-    output = "magic:spell_missile 2",
-    recipe = {
-        {"magic:rage_essence", "magic:day_essence", "group:minor_spellbinding"},
-    },
-})
-
--- Create a small explosion of flowing water.
-local function drop_water(self, pos)
-    local water = "default:water_flowing"
-    local limit = 5
-    -- Put out fires first.
-    local positions = kingdoms.utils.shuffled(kingdoms.utils.find_nodes_by_area(pos, 3, {"fire:basic_flame"}))
-    for _,p in ipairs(positions) do
-        limit = limit - 1
-        minetest.set_node(p, {name=water})
-        if limit <= 0 then
-            break
-        end
-    end
-    limit = math.max(limit, 3)
-    -- A smaller air radius, avoiding travel through thick walls.
-    positions = kingdoms.utils.shuffled(kingdoms.utils.find_nodes_by_area(pos, 1, {"air"}))
-    for _,p in ipairs(positions) do
-        limit = limit - 1
-        minetest.set_node(p, {name=water})
-        if limit <= 0 then
-            break
-        end
-    end
-    return true
-end
-
-magic.register_spell("magic:spell_water", {
-    description = "Water Spell",
-    type = "missile",
-    color = "#00F",
-    emblem = "action",
-    speed = 20,
-    cost = 4,
-    gravity = 0.25,
-    hit_node = drop_water,
-    hit_object = drop_water,
-})
-minetest.register_craft({
-    output = "magic:spell_water 2",
-    recipe = {
-        {"magic:calm_essence", "group:minor_spellbinding", "magic:area_essence"},
-    },
-})
-
-local function drop_ice(self, pos)
-    self.firsthit = self.firsthit or pos
-    if minetest.get_node(pos).name ~= "default:water_source" and minetest.get_node(pos).name ~= "default:water_flowing" then
-        return true
-    else
-        if vector.distance(self.firsthit, pos) >= 16 then
-            return true
-        end
-    end
-    local limit = 6
-    local positions = kingdoms.utils.shuffled(kingdoms.utils.find_nodes_by_area_under_air(pos, 4, {"default:water_source"}))
-    for _,p in ipairs(positions) do
-        limit = limit - 1
-        minetest.set_node(p, {name="default:ice"})
-        if limit <= 0 then
-            break
-        end
-    end
-end
-
--- Convert water sources to ice.
-magic.register_spell("magic:spell_ice", {
-    description = "Ice Spell",
-    type = "missile",
-    color = "#08B",
-    emblem = "action",
-    speed = 20,
-    cost = 8,
-    hit_node = drop_ice,
-    hit_object = drop_ice,
-})
-minetest.register_craft({
-    output = "magic:spell_ice 2",
-    recipe = {
-        {"magic:concentrated_night_essence", "magic:calm_essence", ""},
-        {"group:minor_spellbinding", "magic:area_essence", "magic:solidity_essence"},
-    },
-})

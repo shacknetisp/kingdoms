@@ -32,5 +32,9 @@ domodfile("timegens.lua")
 domodfile("crystals.lua")
 domodfile("spells.lua")
 
+domodfile("spells/action.lua")
+domodfile("spells/attack.lua")
+domodfile("spells/defense.lua")
+
 magic.log("action", "Loaded.")
 kingdoms.mod_ready("magic")

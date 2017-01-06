@@ -26,7 +26,7 @@ end
 
 minetest.register_craft({
     type = "shapeless",
-    output = "magic:null_essence 3",
+    output = "magic:null_essence 4",
     recipe = {"group:minor_essence", "default:gold_ingot", "group:minor_essence"},
 })
 

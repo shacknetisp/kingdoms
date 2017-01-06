@@ -29,15 +29,16 @@ function magic.damage_obj(obj, groups)
     local x = 0
     local armor = obj:get_armor_groups()
     for k,v in pairs(groups) do
-        local percent = 1
+        local factor = 1
         if k ~= 'fleshy' then
-            percent = armor.fleshy / 100
+            factor = armor.fleshy / 100
         end
-        x = x + (v / percent)
+        x = x + (v / factor)
     end
     obj:punch(obj, 1.0, {full_punch_interval=1.0, damage_groups={fleshy=x}, nil})
 end
 
+-- The fireball, ignites flames and deals fire damage.
 magic.register_spell("magic:spell_fire", {
     description = "Fire Spell",
     type = "missile",
@@ -76,7 +77,13 @@ minetest.register_craft({
         {"magic:rage_essence", "group:minor_spellbinding"},
     },
 })
+minetest.register_craft({
+    type = "fuel",
+    recipe = "magic:spell_fire",
+    burntime = 550,
+})
 
+-- The bomb, creates a TNT-style explosion at the contact point.
 if rawget(_G, 'tnt') and tnt.boom then
     local hit_node = function(self, pos, last_empty_pos)
         local puts_out = minetest.get_item_group(minetest.get_node(pos).name, "puts_out_fire")
@@ -109,3 +116,52 @@ if rawget(_G, 'tnt') and tnt.boom then
         },
     })
 end
+
+-- A weak but cheap dart.
+magic.register_spell("magic:spell_dart", {
+    description = "Dart",
+    type = "missile",
+    color = "#333",
+    emblem = "attack",
+    speed = 60,
+    cost = 1,
+    hit_object = function(self, pos, obj)
+        magic.damage_obj(obj, {fleshy = 2})
+        return true
+    end,
+    hit_player = function(self, pos, obj)
+        magic.damage_obj(obj, {fleshy = 2})
+        return true
+    end,
+})
+minetest.register_craft({
+    output = "magic:spell_dart 6",
+    recipe = {
+        {"magic:area_essence", "magic:solidity_essence"},
+        {"group:minor_spellbinding", "group:stone"},
+    },
+})
+
+-- A weak dart that deals armor-bypassing magic and fire damage.
+magic.register_spell("magic:spell_missile", {
+    description = "Missile",
+    type = "missile",
+    color = "#00F",
+    emblem = "attack",
+    speed = 50,
+    cost = 1,
+    hit_object = function(self, pos, obj)
+        magic.damage_obj(obj, {magic = 1, fire = 1})
+        return true
+    end,
+    hit_player = function(self, pos, obj)
+        magic.damage_obj(obj, {magic = 1, fire = 1})
+        return true
+    end,
+})
+minetest.register_craft({
+    output = "magic:spell_missile 2",
+    recipe = {
+        {"magic:rage_essence", "magic:day_essence", "group:minor_spellbinding"},
+    },
+})

@@ -250,7 +250,7 @@ function magic.register_missile(name, texture, def, item_def)
         local obj = minetest.add_entity({x=playerpos.x,y=playerpos.y+1.4,z=playerpos.z}, name)
         local dir = player:get_look_dir()
         obj:setvelocity({x=dir.x*def.speed, y=dir.y*def.speed, z=dir.z*def.speed})
-        obj:setacceleration({x=dir.x*-3, y=-8.5*(def.gravity or 0), z=dir.z*-3})
+        obj:setacceleration({x=0, y=-8.5*(def.gravity or 0), z=0})
         obj:setyaw(player:get_look_yaw()+math.pi)
         if obj:get_luaentity() then
             obj:get_luaentity().player = player

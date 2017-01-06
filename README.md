@@ -17,6 +17,10 @@ This modpack contains some alternative versions of mods with modifications to wo
 * doors: respect kingdom levels, add heavy doors.
 * tnt: respect explosion blockers/absorbers, work better with objects and mobs, deal damage through magic.damage_obj.
 
+Kingdoms also overrides a few default nodes.
+* chests: respect kingdom levels, add heavy chests.
+* furnace: respect kingdom levels.
+
 # Compatability
 
 Kingdoms is mostly compatible with other mods by default, but mods that register locked/owned items or query protection may need some tweaking.
@@ -29,4 +33,4 @@ All locked/owned items should be replaced with tests for kingdom levels or is_pr
 * unified_inventory is hooked into with a kingdoms button.
 
 * Most hunger mods will work, the mana bar from magic is placed above the usual hunger bar location.
-* Most mob mods will be compatible with magic's damage system. Mobs such as Dungeon Masters should not deal direct damage to nodes, but channel their destruction through the included tnt mod.
+* Most mob mods will be compatible with magic's damage system. Mobs such as Dungeon Masters should not deal direct damage to nodes (especially protected nodes), but should channel their destruction through the included tnt mod.

@@ -158,6 +158,7 @@ function magic.register_crystal(def, nocraft)
 
     if not def.nodefgen then
         local ores = {
+            -- 30k belt.
             {
                 rarity = 8 * 8 * 8,
                 clust_num_ores = 4,
@@ -165,6 +166,7 @@ function magic.register_crystal(def, nocraft)
                 y_max          = -30000,
                 y_min          = -30008,
             },
+            -- 20k belt.
             {
                 rarity = 9 * 9 * 9,
                 clust_num_ores = 4,
@@ -172,6 +174,7 @@ function magic.register_crystal(def, nocraft)
                 y_max          = -20000,
                 y_min          = -20016,
             },
+            -- 10k belt.
             {
                 rarity = 10 * 10 * 10,
                 clust_num_ores = 4,
@@ -205,12 +208,6 @@ function magic.register_crystal(def, nocraft)
                 clust_size     = 2,
                 y_max          = -64,
                 y_min = -512,
-            },
-            {
-                rarity = 14 * 14 * 14,
-                clust_num_ores = 3,
-                clust_size     = 2,
-                y_min          = 32,
             },
             {
                 rarity = 14 * 14 * 14,

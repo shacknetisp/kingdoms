@@ -326,17 +326,23 @@ local function tnt_explode(pos, radius, ignore_protection, ignore_on_blast, on_b
 end
 
 function tnt.boom(pos, def)
+        if not def.ignore_protection and minetest.is_protected(pos, "") then
+            return
+	end
         local on_blast_queue = {}
         local ndef = minetest.registered_nodes[minetest.get_node(pos).name]
-        if ndef.on_blast and not def.ignore_on_blast then
-            on_blast_queue[#on_blast_queue + 1] = {pos = vector.new(pos), on_blast = ndef.on_blast}
-        end
-        if ndef.on_pre_blast and not def.ignore_on_blast then
-            ndef.on_pre_blast(pos)
-        end
 	minetest.sound_play("tnt_explode", {pos = pos, gain = 1.5, max_hear_distance = 2*64})
-	minetest.set_node(pos, {name = "tnt:boom"})
-	minetest.get_node_timer(pos):start(0.5)
+        if (not ndef.on_blast and not ndef.on_pre_blast) or def.ignore_on_blast then
+            minetest.set_node(pos, {name = "tnt:boom"})
+            minetest.get_node_timer(pos):start(0.5)
+        else
+            if ndef.on_blast and not def.ignore_on_blast then
+                on_blast_queue[#on_blast_queue + 1] = {pos = vector.new(pos), on_blast = ndef.on_blast}
+            end
+            if ndef.on_pre_blast and not def.ignore_on_blast then
+                ndef.on_pre_blast(pos)
+            end
+        end
 	local drops = tnt_explode(pos, def.radius, def.ignore_protection,
 			def.ignore_on_blast, on_blast_queue)
 	entity_physics(pos, def.damage_radius)

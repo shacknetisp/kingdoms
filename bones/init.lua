@@ -59,8 +59,10 @@ minetest.register_node("bones:bones", {
         if blast_items[minetest.pos_to_string(pos)] then
             local c = blast_items[minetest.pos_to_string(pos)]
             blast_items[minetest.pos_to_string(pos)] = nil
+            minetest.remove_node(pos)
             return c
         end
+        minetest.remove_node(pos)
     end,
 
     can_dig = function(pos, player)

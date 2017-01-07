@@ -5,6 +5,7 @@ magic.register_spell("magic:spell_dark_shield", {
     color = "#222",
     emblem = "defense",
     cost = 1,
+    allow_turret = true,
     protects = {
         fire = {
             max = 4,
@@ -26,6 +27,7 @@ magic.register_spell("magic:spell_white_shield", {
     color = "#DDD",
     emblem = "defense",
     cost = 1,
+    allow_turret = true,
     protects = {
         magic = {
             max = 4,
@@ -48,6 +50,7 @@ magic.register_spell("magic:spell_solid_shield", {
     color = "#AA0",
     emblem = "defense",
     cost = 2,
+    allow_turret = true,
     protects = {
         fleshy = {
             max = 4,

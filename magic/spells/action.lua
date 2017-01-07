@@ -70,9 +70,10 @@ magic.register_spell("magic:spell_ice", {
     emblem = "action",
     speed = 20,
     cost = 8,
+    element = "cold",
     hit_node = drop_ice,
     hit_object = function(self, pos, obj)
-        magic.damage_obj(obj, {cold = 4})
+        magic.damage_obj(obj, {cold = (self.was_near_turret > 0 and 2 or 4)})
         return true
     end,
 })

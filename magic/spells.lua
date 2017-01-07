@@ -34,8 +34,11 @@ function magic.damage_obj(obj, g)
         local heldstack = obj:get_wielded_item()
         local def = minetest.registered_items[heldstack:get_name()]
         local remove = false
-        if def.original.protects then
+        if (def.groups.spell or 0) > 0 and def.original.protects then
             for k,protect in pairs(def.original.protects) do
+                if not groups[k] then
+                    break
+                end
                 if def.original.harmful then
                     if not magic.require_energy(obj, def.original.cost) then
                         break

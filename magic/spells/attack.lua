@@ -6,6 +6,8 @@ magic.register_spell("magic:spell_fire", {
     emblem = "attack",
     speed = 30,
     cost = 2,
+    allow_turret = true,
+    element = "fire",
     hit_node = function(self, pos, last_empty_pos)
         local flammable = minetest.get_item_group(minetest.get_node(pos).name, "flammable")
         local puts_out = minetest.get_item_group(minetest.get_node(pos).name, "puts_out_fire")
@@ -16,6 +18,8 @@ magic.register_spell("magic:spell_fire", {
         if flammable > 0 then
             minetest.set_node(pos, {name = "fire:basic_flame"})
             return true
+        elseif magic.missile_passable(pos) then
+            return false
         elseif last_empty_pos then
             minetest.set_node(last_empty_pos, {name = "fire:basic_flame"})
             return true
@@ -23,7 +27,7 @@ magic.register_spell("magic:spell_fire", {
         return false
     end,
     hit_object = function(self, pos, obj)
-        magic.damage_obj(obj, {fire = 4})
+        magic.damage_obj(obj, {fire = (self.was_near_turret > 0 and 2 or 4)})
         return true
     end,
 })
@@ -47,6 +51,9 @@ if rawget(_G, 'tnt') and tnt.boom then
             -- This spell can travel through water.
             return false
         end
+        if magic.missile_passable(pos) then
+            return false
+        end
         tnt.boom(pos, {
             radius = 3,
             damage_radius = 5,
@@ -61,9 +68,15 @@ if rawget(_G, 'tnt') and tnt.boom then
         speed = 15,
         cost = 6,
         gravity = 0.5,
+        element = "fire",
         hit_node = hit_node,
         hit_object = function(self, pos, obj)
             return hit_node(self, pos)
+        end,
+        near_turret = function(self, pos, spell)
+            if spell.protects and spell.protects.fire and magic.use_turrent_spell(pos) then
+                return true
+            end
         end,
     })
     minetest.register_craft({
@@ -82,8 +95,10 @@ magic.register_spell("magic:spell_dart", {
     emblem = "attack",
     speed = 60,
     cost = 1,
+    element = "fleshy",
+    allow_turret = true,
     hit_object = function(self, pos, obj)
-        magic.damage_obj(obj, {fleshy = 2})
+        magic.damage_obj(obj, {fleshy = (self.was_near_turret > 0 and 1 or 2)})
         return true
     end,
 })
@@ -103,8 +118,10 @@ magic.register_spell("magic:spell_missile", {
     emblem = "attack",
     speed = 50,
     cost = 1,
+    element = "magic",
+    allow_turret = true,
     hit_object = function(self, pos, obj)
-        magic.damage_obj(obj, {magic = 1, fire = 1})
+        magic.damage_obj(obj, {magic = (self.was_near_turret > 0 and 0.5 or 1), fire = (self.was_near_turret > 0 and 0.5 or 1)})
         return true
     end,
 })

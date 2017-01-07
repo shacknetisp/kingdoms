@@ -68,3 +68,11 @@ minetest.register_craft({
         {"default:bronzeblock", "magic:rage_essence", "magic:control_essence"},
     },
 })
+
+minetest.register_craft({
+    output = "magic:turret",
+    recipe = {
+        {"magic:rage_essence", "magic:control_essence"},
+        {"default:steelblock", "group:spellbinding"},
+    },
+})

@@ -62,6 +62,14 @@ local function rayIter(pos, dir, range)
 end
 -- END COPIED
 
+function magic.missile_passable(pos)
+    local def = minetest.registered_nodes[minetest.get_node(pos).name]
+    if not def.walkable and def.buildable_to then
+        return true
+    end
+    return false
+end
+
 function magic.register_missile(name, texture, def, item_def)
 
     def.hit_object = def.hit_object or function(self, pos, obj)
@@ -73,7 +81,14 @@ function magic.register_missile(name, texture, def, item_def)
     end
 
     def.hit_node = def.hit_node or function(self, pos, last_empty_pos)
+        if magic.missile_passable(pos) then
+            return false
+        end
         return true
+    end
+
+    def.near_turret = def.near_turret or function(self, pos, spell)
+        return false
     end
 
     def.is_passthrough_node = def.is_passthrough_node or function(self, pos, node)
@@ -89,6 +104,7 @@ function magic.register_missile(name, texture, def, item_def)
             textures = {texture},
             lastpos={},
             lastair = nil,
+            was_near_turret = 0,
             collisionbox = {0,0,0,0,0,0},
     }
 
@@ -105,6 +121,7 @@ function magic.register_missile(name, texture, def, item_def)
                 elseif def.is_passthrough_node(self, vector.add(pos, {x=0, y=2, z=0}), minetest.get_node(vector.add(pos, {x=0, y=2, z=0}))) then
                     self.lastair = vector.add(pos, {x=0, y=2, z=0})
                 end
+                return
             end
 
             if self.timer > TIMEOUT then
@@ -115,11 +132,12 @@ function magic.register_missile(name, texture, def, item_def)
             local line = {
                 start = self.lastpos,
                 finish = pos,
-                middle = {
-                    x = (self.lastpos.x + pos.x) / 2,
-                    y = (self.lastpos.y + pos.y) / 2,
-                    z = (self.lastpos.z + pos.z) / 2,
-                },
+            }
+
+            line.middle = {
+                x = (line.start.x + line.finish.x) / 2,
+                y = (line.start.y + line.finish.y) / 2,
+                z = (line.start.z + line.finish.z) / 2,
             }
 
             local Hit = {x=0, y=0, z=0};
@@ -166,11 +184,11 @@ function magic.register_missile(name, texture, def, item_def)
             end
 
             local function CheckLineNear(line, pos, distance)
-                local nx = 0.5
+                local nx = 0.25
                 if line.finish.x < line.start.x then nx = -nx end
-                local ny = 0.5
+                local ny = 0.25
                 if line.finish.y < line.start.y then ny = -ny end
-                local nz = 0.5
+                local nz = 0.25
                 if line.finish.z < line.start.z then nz = -nz end
 
                 for x=line.start.x,line.finish.x,nx do
@@ -186,31 +204,22 @@ function magic.register_missile(name, texture, def, item_def)
                 return false
             end
 
-            local objs = minetest.get_objects_inside_radius(line.middle, (math.ceil(vector.distance(line.middle, line.start)) + math.ceil(vector.distance(line.middle, line.finish)) * 2) + 6)
-            for k, obj in pairs(objs) do
-                    local bb = obj:get_properties().collisionbox
-                    -- If bb collides with line...
-                    local b1 = vector.add(obj:getpos(), vector.multiply({x=bb[1], y=bb[2], z=bb[3]}, 1.5))
-                    local b2 = vector.add(obj:getpos(), vector.multiply({x=bb[4], y=bb[5], z=bb[6]}, 1.5))
-                    if CheckLineBox(b1, b2, line.start, line.finish) or CheckLineNear(line, obj:getpos(), 1) then
-                        if obj:get_luaentity() ~= nil then
-                                if obj:get_luaentity().name ~= name and not NO_HIT_ENTS[obj:get_luaentity().name] then
-                                    if def.hit_object(self, obj:getpos(), obj) then
-                                        self.object:remove()
-                                    end
-                                end
-                        elseif obj:is_player() then
-                            local can = true
-                            if self.timer > 0.5 or not self.player or obj:get_player_name() ~= self.player:get_player_name() then
-                                if def.hit_player(self, obj:getpos(), obj) then
-                                    self.object:remove()
-                                end
-                            end
-                        end
-                    end
+            for _,pos in ipairs(kingdoms.utils.find_nodes_by_area(pos, magic.config.turret_shield_radius, {"magic:turret"})) do
+                if self.kingdom == minetest.get_meta(pos):get_string("kingdom.id") then
+                    break
+                end
+                local turret_spell = magic.get_turret_spell(pos)
+                if turret_spell.protects and turret_spell.protects[def.element] and (self.was_near_turret > 1 or magic.use_turrent_spell(pos)) then
+                    self.was_near_turret = self.was_near_turret + 1
+                end
+                if def.near_turret(self, pos, turret_spell) then
+                    self.object:remove()
+                    return
+                end
             end
 
             local hitnode = nil
+            local willremove = false
 
             for pos in rayIter(line.start, self.object:getvelocity(), vector.distance(line.start, line.finish)) do
                 local node = minetest.get_node(pos)
@@ -225,7 +234,43 @@ function magic.register_missile(name, texture, def, item_def)
             if hitnode then
                 if def.hit_node(self, hitnode, self.lastair) then
                     self.object:remove()
+                    willremove = true
                 end
+            end
+
+            local objs = minetest.get_objects_inside_radius(line.middle, (math.ceil(vector.distance(line.middle, line.start)) + math.ceil(vector.distance(line.middle, line.finish)) * 2) + 6)
+            for k, obj in pairs(objs) do
+                    local bb = obj:get_properties().collisionbox
+                    local pp = vector.add(obj:getpos(), {x=0, y=0.5, z=0})
+                    -- If bb collides with line...
+                    local b1 = vector.add(pp, vector.multiply({x=bb[1], y=bb[2], z=bb[3]}, 1.5))
+                    local b2 = vector.add(pp, vector.multiply({x=bb[4], y=bb[5], z=bb[6]}, 1.5))
+                    if willremove and vector.distance(obj:getpos(), line.start) > vector.distance(hitnode, line.start) then
+                        break
+                    end
+                    if CheckLineBox(b1, b2, line.start, line.finish) or CheckLineNear(line, pp, 1) then
+                        if obj:get_luaentity() ~= nil then
+                                if obj:get_luaentity().name ~= name and not NO_HIT_ENTS[obj:get_luaentity().name] then
+                                    if def.hit_object(self, obj:getpos(), obj) then
+                                        self.object:remove()
+                                        return
+                                    end
+                                end
+                        elseif obj:is_player() then
+                            local can = true
+                            if self.timer > 0.5 or not self.player or obj:get_player_name() ~= self.player:get_player_name() then
+                                if def.hit_player(self, obj:getpos(), obj) then
+                                    self.object:remove()
+                                    return
+                                end
+                            end
+                        end
+                    end
+            end
+
+            if willremove then
+                self.object:remove()
+                return
             end
 
             if self.particletimer > 0.05 then
@@ -252,11 +297,8 @@ function magic.register_missile(name, texture, def, item_def)
         obj:setvelocity({x=dir.x*def.speed, y=dir.y*def.speed, z=dir.z*def.speed})
         obj:setacceleration({x=0, y=-8.5*(def.gravity or 0), z=0})
         obj:setyaw(player:get_look_yaw()+math.pi)
-        if obj:get_luaentity() then
-            obj:get_luaentity().player = player
-        else
-            obj:remove()
-        end
+        obj:get_luaentity().player = player
+        obj:get_luaentity().kingdom = kingdoms.player.kingdom(player:get_player_name()) and kingdoms.player.kingdom(player:get_player_name()).id or nil
         itemstack:take_item()
         return itemstack
     end

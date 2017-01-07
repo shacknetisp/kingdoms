@@ -16,9 +16,8 @@ These claims cannot overlap with other claims, and must be spaced with at least 
 
 Defending a neutral area, or even preventing enemies from entering your clamied area, is enhanced beyond personal battle by the addition of several nodes:
 
-* (TODO) Turrets, which ward off enemies by blasting spells at them.
+* Turrets, which, after a missile or shield spell is inserted, will ward off enemies by blasting spells at them and cancel or subdue enemy spells.
 * Materializers and Materialized Walls. The Walls act like hard stone, but when a Materializer is placed by them they will level from 1 to 4 over time. A level 4 node, when dug, will revert to a level 3 instead of vanishing, and so on down to a level 1. They will also absorb explosions, preventing damage inside them.
-* (TODO) Spell Wards, which prevent destructive or disruptive spells from entering your territory.
 
 ## Destroying a Corestone
 

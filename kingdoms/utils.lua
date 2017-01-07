@@ -89,6 +89,7 @@ kingdoms.db.forceloaded = kingdoms.db.forceloaded or {}
 for _,pos in ipairs(kingdoms.db.forceloaded) do
     minetest.forceload_free_block(pos)
 end
+kingdoms.db.forceloaded = {}
 
 function kingdoms.utils.load_pos(pos)
     minetest.setting_set("max_forceloaded_blocks", tostring((minetest.setting_get("max_forceloaded_blocks") or 16) + 1))
@@ -96,8 +97,25 @@ function kingdoms.utils.load_pos(pos)
         error("Could not forceload at "..minetest.pos_to_string(pos))
     end
     table.insert(kingdoms.db.forceloaded, pos)
-    minetest.after(1, function(pos)
+    minetest.after(5, function(pos)
+        local index = nil
+        for i,p in ipairs(kingdoms.db.forceloaded) do
+            if p.x == pos.x and p.y == pos.y and p.z == pos.z then
+                index = i
+                break
+            end
+        end
+        if index then
+            table.remove(kingdoms.db.forceloaded, index)
+        end
         minetest.forceload_free_block(pos)
         minetest.setting_set("max_forceloaded_blocks", tostring((minetest.setting_get("max_forceloaded_blocks") or 16) - 1))
     end, pos)
 end
+
+minetest.register_on_shutdown(function()
+    for _,pos in ipairs(kingdoms.db.forceloaded) do
+        minetest.forceload_free_block(pos)
+    end
+    kingdoms.db.forceloaded = {}
+end)

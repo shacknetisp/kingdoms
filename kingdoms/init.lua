@@ -43,7 +43,6 @@ kingdoms.dbmeta.load()
 
 -- Save at regular intervals and upon shutdown.
 minetest.after(kingdoms.config.save_delay, kingdoms.dbmeta.save_after)
-minetest.register_on_shutdown(kingdoms.dbmeta.save)
 
 domodfile("utils.lua")
 
@@ -67,6 +66,8 @@ domodfile("crafts.lua")
 
 -- 3d_armor
 ARMOR_HEAL_MULTIPLIER = 0
+
+minetest.register_on_shutdown(kingdoms.dbmeta.save)
 
 -- All done!
 kingdoms.log("action", "Completely loaded.")

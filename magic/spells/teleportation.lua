@@ -102,7 +102,13 @@ if magic.config.enable_short_teleports then
         gravity = 0.35,
         forceload = true,
         hit_node = function(self, pos, last_empty_pos)
+            local akingdom = kingdoms.bypos(last_empty_pos)
             if self.player then
+                local pkingdom = kingdoms.player.kingdom(self.player:get_player_name())
+                if akingdom and (not pkingdom or pkingdom.id ~= akingdom.id) then
+                    minetest.chat_send_player(self.player:get_player_name(), "You cannot teleport there.")
+                    return true
+                end
                 self.player:setpos(last_empty_pos)
             end
             return true

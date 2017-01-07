@@ -230,7 +230,9 @@ function magic.register_missile(name, texture, def, item_def)
 
             for pos in rayIter(line.start, self.object:getvelocity(), vector.distance(line.start, line.finish)) do
                 local node = minetest.get_node(pos)
-                if def.is_passthrough_node(self, pos, node) then
+                if node.name == "ignore" then
+                    return
+                elseif def.is_passthrough_node(self, pos, node) then
                     self.lastair = pos
                 else
                     hitnode = pos
@@ -303,7 +305,7 @@ function magic.register_missile(name, texture, def, item_def)
         local dir = player:get_look_dir()
         obj:setvelocity({x=dir.x*def.speed, y=dir.y*def.speed, z=dir.z*def.speed})
         obj:setacceleration({x=0, y=-8.5*(def.gravity or 0), z=0})
-        obj:setyaw(player:get_look_yaw()+math.pi)
+        obj:setyaw(player:get_look_horizontal()+math.pi)
         obj:get_luaentity().player = player
         obj:get_luaentity().kingdom = kingdoms.player.kingdom(player:get_player_name()) and kingdoms.player.kingdom(player:get_player_name()).id or nil
         itemstack:take_item()

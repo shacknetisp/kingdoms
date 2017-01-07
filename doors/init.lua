@@ -318,7 +318,7 @@ function doors.register(name, def)
 			return itemstack
 		end
 	})
-        
+
 	if not def.sounds then
 		def.sounds = default.node_sound_wood_defaults()
 	end
@@ -468,7 +468,7 @@ doors.register("door_steel", {
 
 doors.register("door_steel_heavy", {
 		tiles = {{ name = "doors_door_steel.png", backface_culling = true }},
-		description = "Steel Door",
+		description = "Heavy Steel Door",
 		inventory_image = "doors_item_steel.png",
                 heavy = true,
 		protected = true,
@@ -535,7 +535,7 @@ end
 function _doors.trapdoor_toggle(pos, clicker)
 	local node = minetest.get_node(pos)
 	local def = minetest.registered_nodes[node.name]
-        
+
         if not kingdoms.check_pos_level(pos, clicker:get_player_name(), def.heavy and "heavy_doors" or "doors", "You are not of a sufficient level to open this trapdoor.") then
             return false
         end
@@ -803,5 +803,3 @@ doors.register_fencegate("doors:gate_aspen_wood", {
 	material = "default:aspen_wood",
 	groups = {choppy = 2, oddly_breakable_by_hand = 2, flammable = 2}
 })
-
-kingdoms.log("action", "Doors loaded.")

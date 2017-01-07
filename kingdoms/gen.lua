@@ -1,15 +1,13 @@
 -- Set flags used by Kingdoms.
-minetest.register_on_mapgen_init(function(params)
-    if kingdoms.config.mapgen then
-        minetest.set_mapgen_setting("mgname", "v7")
-        minetest.set_mapgen_setting("flags", "trees, caves, dungeons, noflat, light, decorations")
-        -- Biomes won't be registered properly until done manually.
-        default.register_biomes()
-        default.register_decorations()
-        kingdoms.log("action", "Applied mapgen settings.")
-    end
-    magic.register_mapgen()
-end)
+if kingdoms.config.mapgen then
+    minetest.set_mapgen_setting("mgname", "v7")
+    minetest.set_mapgen_setting("flags", "trees, caves, dungeons, noflat, light, decorations")
+    -- Biomes won't be registered properly until done manually.
+    default.register_biomes()
+    default.register_decorations()
+    kingdoms.log("action", "Applied mapgen settings.")
+end
+magic.register_mapgen()
 
 local registered_items = {}
 function kingdoms.register_dungeon_node(name, probability)

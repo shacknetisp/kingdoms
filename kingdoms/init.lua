@@ -59,6 +59,7 @@ domodfile("barriers.lua")
 -- Overrides of default to support kingdoms.
 domodfile("ext/chests.lua")
 domodfile("ext/furnace.lua")
+domodfile("ext/unregister.lua")
 -- Silver without moreores.
 domodfile("ext/silver.lua")
 

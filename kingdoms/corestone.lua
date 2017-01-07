@@ -362,7 +362,7 @@ minetest.register_node("kingdoms:core_disruptor", {
     drawtype = "nodebox",
     tiles = {"kingdoms_core_disruptor.png"},
     sounds = default.node_sound_stone_defaults(),
-    groups = {oddly_breakable_by_hand = 2, unbreakable = 1},
+    groups = {cracky = 1, level = 2},
     is_ground_content = false,
     paramtype = "light",
     light_source = 1,

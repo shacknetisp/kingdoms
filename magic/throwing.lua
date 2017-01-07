@@ -97,6 +97,7 @@ function magic.register_missile(name, texture, def, item_def)
 
     local ent_def = {
             physical = false,
+            hp_max = math.ceil(def.cost / 2),
             timer=0,
             particletimer = 0,
             visual = "sprite",

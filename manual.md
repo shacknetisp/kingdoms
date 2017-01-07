@@ -7,10 +7,10 @@ Either way you join a kindom, you will be greeted with the standard kingdoms int
 
 ## Claiming Land
 
-Without a land claim, you would be forced to hide from other players who would have unrestricted ability to destroy your work. This is solved by the presence of *Corestones*, which, once placed, claim a 50x50x50 cube of land where nobody else can build or access devices unless they have an appropriate level in the kingdom.
-These claims cannot overlap with other claims, and must be spaced with at least 50 nodes between their areas so that there is plenty of neutral land that cannot be claimed. They also cannot be placed below -32y, avoiding claiming of mining zones.
+Without a land claim, you would be forced to hide from other players who would have unrestricted ability to destroy your work. This is solved by the presence of *Corestones*, which, once placed, claim a 64x64x64 cube of land where nobody else can build or access devices unless they have an appropriate level in the kingdom.
+These claims cannot overlap with other claims, and must be spaced with at least 64 nodes between their areas so that there is plenty of neutral land that cannot be claimed. They also cannot be placed below -32y, avoiding claiming of mining zones.
 
-50x50x50 is somewhat restrictive, however, and even the neutral area around a corestone could be consumed by larger kingdoms. Outside of the neutral area, there is a possibility that a new corestone could be placed, undermining all the building you have done there. To counter this, you can place *Claim wards*, which prevent corestones from being placed if the ward would land inside the claimed zone.
+64x64x64 is somewhat restrictive, however, and even the neutral area around a corestone could be consumed by larger kingdoms. Outside of the neutral area, there is a possibility that a new corestone could be placed, undermining all the building you have done there. To counter this, you can place *Claim wards*, which prevent corestones from being placed if the ward would land inside the claimed zone.
 
 ## Defending Land
 
@@ -21,7 +21,7 @@ Defending a neutral area, or even preventing enemies from entering your clamied 
 
 ## Destroying a Corestone
 
-The ability to take over another kingdom's claim is a large part of the game, and this is facilitated by *Core Disruptors*. When placed within a 75x75x75 cube centered around the target corestone, the target's *corestone score* will begin to decrease slowly, lowering faster depending on how many disruptors you can place. When this score reaches zero, the corestone will vanish and you can pillage the now-unprotected area.
+The ability to take over another kingdom's claim is a large part of the game, and this is facilitated by *Core Disruptors*. When placed within a 96x96x96 cube centered around the target corestone, the target's *corestone score* will begin to decrease slowly, lowering faster depending on how many disruptors you can place. When this score reaches zero, the corestone will vanish and you can pillage the now-unprotected area.
 
 ### Defense
 

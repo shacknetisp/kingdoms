@@ -36,6 +36,7 @@ domodfile("turrets.lua")
 domodfile("spells/action.lua")
 domodfile("spells/attack.lua")
 domodfile("spells/defense.lua")
+domodfile("spells/teleportation.lua")
 
 magic.log("action", "Loaded.")
 kingdoms.mod_ready("magic")

@@ -24,8 +24,15 @@ magic.crystals = {
     {
         name = "area",
         desc = "Area",
-        color = "#0CC",
+        color = "#033",
         light = 8,
+    },
+    {
+        name = "warp",
+        desc = "Warp",
+        color = "#0CC",
+        light = 13,
+        rarity = 0.5,
     },
     {
         name = "control",
@@ -136,7 +143,7 @@ function magic.register_crystal(def, nocraft)
         sounds = default.node_sound_stone_defaults(),
     })
 
-    kingdoms.at_mod_load("kingdoms", function() kingdoms.register_dungeon_node("magic:concentrated_crystal_"..def.name, 4 / #magic.crystals) end)
+    kingdoms.at_mod_load("kingdoms", function() kingdoms.register_dungeon_node("magic:concentrated_crystal_"..def.name, (4 / #magic.crystals) * (def.rarity or 1)) end)
 
     minetest.register_craftitem("magic:"..def.name.."_essence", {
         description = def.desc.." Essence",

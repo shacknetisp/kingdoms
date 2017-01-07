@@ -19,6 +19,14 @@ function magic.register_spell(name, def)
             if not docost(player) then return end
             return f(itemstack, player, pointed_thing)
         end
+    elseif def.type == "action" then
+        function item_def.on_use(itemstack, player, pointed_thing)
+            if not docost(player) then return end
+            if def.on_use(itemstack, player, pointed_thing) then
+                itemstack:take_item()
+            end
+            return itemstack
+        end
     elseif def.type == "shield" then
         -- magic.damage_obj handles shields.
     else

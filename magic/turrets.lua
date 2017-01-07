@@ -131,7 +131,7 @@ minetest.register_abm({
                 end
             end
             if closest then
-                local dir = vector.normalize{x=closest:getpos().x - pos.x, y=(closest:getpos().y + 0.5) - pos.y, z=closest:getpos().z - pos.z}
+                local dir = vector.normalize{x=closest:getpos().x - pos.x, y=(closest:getpos().y + closest:get_properties().collisionbox[5]) - pos.y, z=closest:getpos().z - pos.z}
                 local mobj = minetest.add_entity(pos, name.."_missile")
                 mobj:setvelocity({x=dir.x*def.speed, y=dir.y*def.speed, z=dir.z*def.speed})
                 mobj:setacceleration({x=0, y=-8.5*(def.gravity or 0), z=0})

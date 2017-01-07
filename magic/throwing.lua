@@ -184,11 +184,11 @@ function magic.register_missile(name, texture, def, item_def)
             end
 
             local function CheckLineNear(line, pos, distance)
-                local nx = 0.25
+                local nx = 0.5
                 if line.finish.x < line.start.x then nx = -nx end
-                local ny = 0.25
+                local ny = 0.5
                 if line.finish.y < line.start.y then ny = -ny end
-                local nz = 0.25
+                local nz = 0.5
                 if line.finish.z < line.start.z then nz = -nz end
 
                 for x=line.start.x,line.finish.x,nx do

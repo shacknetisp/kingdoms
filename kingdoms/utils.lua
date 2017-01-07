@@ -83,3 +83,21 @@ function kingdoms.utils.shuffled(t_in)
     end
     return ret
 end
+
+kingdoms.db.forceloaded = kingdoms.db.forceloaded or {}
+
+for _,pos in ipairs(kingdoms.db.forceloaded) do
+    minetest.forceload_free_block(pos)
+end
+
+function kingdoms.utils.load_pos(pos)
+    minetest.setting_set("max_forceloaded_blocks", tostring((minetest.setting_get("max_forceloaded_blocks") or 16) + 1))
+    if not minetest.forceload_block(pos) then
+        error("Could not forceload at "..minetest.pos_to_string(pos))
+    end
+    table.insert(kingdoms.db.forceloaded, pos)
+    minetest.after(1, function(pos)
+        minetest.forceload_free_block(pos)
+        minetest.setting_set("max_forceloaded_blocks", tostring((minetest.setting_get("max_forceloaded_blocks") or 16) - 1))
+    end, pos)
+end

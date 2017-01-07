@@ -90,3 +90,30 @@ minetest.register_craft({
         {"group:minor_spellbinding", "default:junglesapling"},
     },
 })
+
+if magic.config.enable_short_teleports then
+    magic.register_spell("magic:spell_short_teleport", {
+        description = "Short Teleportation Spell",
+        type = "missile",
+        color = "#F0F",
+        emblem = "action",
+        speed = 10,
+        cost = 7,
+        gravity = 0.35,
+        forceload = true,
+        hit_node = function(self, pos, last_empty_pos)
+            if self.player then
+                self.player:setpos(last_empty_pos)
+            end
+            return true
+        end,
+        hit_object = function() return false end
+    })
+    minetest.register_craft({
+        output = "magic:spell_short_teleport",
+        recipe = {
+            {"magic:concentrated_warp_essence", "magic:control_essence"},
+            {"group:minor_spellbinding", ""},
+        },
+    })
+end

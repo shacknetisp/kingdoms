@@ -6,7 +6,7 @@ local function update_formspec(pos)
     meta:set_string("formspec", ([[
         size[8,6]
         label[0,0.1;Input spells. Current: ]]..tostring(name).." qty "..tostring(count)..[[]
-        button[0,1;8,1;setp_%d;Only Players (Current: %s)]
+        button[0,1;8,1;setp_%d;Only target players (current: %s)]
         list[context;input;7,0;1,1;]
         list[current_player;main;0,2;8,4;]
     ]]):format(meta:get_int("onlyplayers"), (meta:get_int("onlyplayers") == 1) and "yes" or "no"))

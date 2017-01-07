@@ -38,6 +38,7 @@ end
 -- Convert all damage to fleshy.
 function magic.damage_obj(obj, g)
     local groups = table.copy(g)
+    -- If the target is a player, apply shields.
     if obj:is_player() then
         local heldstack = obj:get_wielded_item()
         local def = minetest.registered_items[heldstack:get_name()]

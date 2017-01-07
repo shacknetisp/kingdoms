@@ -205,6 +205,12 @@ function magic.register_missile(name, texture, def, item_def)
                 return false
             end
 
+            if def.forceload then
+                for pos in rayIter(line.start, vector.normalize(self.object:getvelocity()), math.max(64, vector.distance(line.start, line.finish) * 2)) do
+                    kingdoms.utils.load_pos(pos)
+                end
+            end
+
             for _,pos in ipairs(kingdoms.utils.find_nodes_by_area(pos, magic.config.turret_shield_radius, {"magic:turret"})) do
                 if self.kingdom == minetest.get_meta(pos):get_string("kingdom.id") then
                     break

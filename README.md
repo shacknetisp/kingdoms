@@ -19,9 +19,10 @@ This modpack contains some alternative versions of mods with modifications to wo
 * doors: respect kingdom levels, add heavy doors.
 * tnt: respect explosion blockers/absorbers, work better with objects and mobs, deal damage through magic.damage_obj.
 
-Kingdoms also overrides a few default nodes.
+Kingdoms also overrides a few default items.
 * chests: respect kingdom levels, add heavy chests.
 * furnace: respect kingdom levels.
+* keys: remove keys entirely
 
 # Compatibility
 

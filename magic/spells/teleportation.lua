@@ -101,6 +101,11 @@ if magic.config.enable_short_teleports then
         cost = 7,
         gravity = 0.35,
         forceload = true,
+        near_turret = function(self, pos, spell)
+            if spell.protects and spell.protects.magic and magic.use_turrent_spell(pos) then
+                return true
+            end
+        end,
         hit_node = function(self, pos, last_empty_pos)
             local akingdom = kingdoms.bypos(last_empty_pos)
             if self.player then

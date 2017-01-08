@@ -65,7 +65,7 @@ local kcommand = {
                 "size[9,6]"
                 .."textlist[0,0;4,5;invitations;"..invitestring..";1]"
                 .."button[0,5;4,1;acceptinvite;Accept Invitation]"
-                .."field[4.75,0.5;4,0.5;name;Kingdom Name (will remove extra whitespace);]"
+                .."field[4.75,0.5;4,0.5;name;Kingdom Name;]"
                 .."button[4.5,1;4,1;create;Create Kingdom]"
             )
         end

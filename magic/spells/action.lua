@@ -41,3 +41,31 @@ minetest.register_craft({
         {"magic:calm_essence", "group:minor_spellbinding", "magic:area_essence"},
     },
 })
+
+magic.register_spell("magic:spell_heal_minor", {
+    description = "Minor Healing Spell",
+    type = "missile",
+    color = "#CCF",
+    emblem = "action",
+    speed = 30,
+    cost = 4,
+    allow_turret = true,
+    friendly_turret = true,
+    check_object = function(obj, ok)
+        if obj:get_hp() >= 20 then
+            return false
+        end
+        return ok
+    end,
+    hit_object = function(self, pos, obj)
+        magic.damage_obj(obj, {
+            healing = (self.was_near_turret > 0 and -1 or -2),
+        })
+    end,
+})
+minetest.register_craft({
+    output = "magic:spell_heal_minor 3",
+    recipe = {
+        {"magic:calm_essence", "group:minor_spellbinding", "magic:day_essence"},
+    },
+})

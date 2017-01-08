@@ -117,14 +117,23 @@ minetest.register_abm({
             local objs = minetest.get_objects_inside_radius(pos, magic.config.turret_missile_radius)
             for _,obj in pairs(objs) do
                 local ok = true
-                if obj:get_luaentity() ~= nil and meta:get_int("onlyplayers") == 0 then
-                    if NO_HIT_ENTS[obj:get_luaentity().name] then
+                if def.friendly_turret then
+                    if not obj:is_player() or not kingdoms.player.kingdom(obj:get_player_name()) or kingdoms.player.kingdom(obj:get_player_name()).id ~= meta:get_string("kingdom.id") then
                         ok = false
                     end
-                elseif obj:is_player() then
-                    if kingdoms.player.kingdom(obj:get_player_name()) and kingdoms.player.kingdom(obj:get_player_name()).id == meta:get_string("kingdom.id") then
-                        ok = false
+                else
+                    if obj:get_luaentity() ~= nil and meta:get_int("onlyplayers") == 0 then
+                        if NO_HIT_ENTS[obj:get_luaentity().name] then
+                            ok = false
+                        end
+                    elseif obj:is_player() then
+                        if kingdoms.player.kingdom(obj:get_player_name()) and kingdoms.player.kingdom(obj:get_player_name()).id == meta:get_string("kingdom.id") then
+                            ok = false
+                        end
                     end
+                end
+                if def.check_object then
+                    ok = def.check_object(obj, ok)
                 end
                 if ok and (not closest or vector.distance(obj:getpos(), pos) < vector.distance(closest:getpos(), pos)) then
                     closest = obj

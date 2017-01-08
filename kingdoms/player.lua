@@ -37,6 +37,13 @@ function kingdoms.player.canpos(pos, name, level)
     return kingdoms.player.can(name, level)
 end
 
+function kingdoms.player.is_friendly(kid, name)
+    local kingdom = kingdoms.db.kingdoms[kid]
+    local pkingdom = kingdoms.player.kingdom(name)
+    if pkingdom and kid == pkingdom.id then return true end
+    if kingdom.friendly_kingdoms[pkingdom.id] then return true end
+    if kingdom.friendly_players[name] then return true end
+end
 
 local function respawn(player)
     local kingdom = kingdoms.player.kingdom(player:get_player_name())

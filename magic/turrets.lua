@@ -118,7 +118,7 @@ minetest.register_abm({
             for _,obj in pairs(objs) do
                 local ok = true
                 if def.friendly_turret then
-                    if not obj:is_player() or not kingdoms.player.kingdom(obj:get_player_name()) or kingdoms.player.kingdom(obj:get_player_name()).id ~= meta:get_string("kingdom.id") then
+                    if not obj:is_player() or not kingdoms.player.is_friendly(meta:get_string("kingdom.id"), obj:get_player_name())  then
                         ok = false
                     end
                 else
@@ -127,7 +127,7 @@ minetest.register_abm({
                             ok = false
                         end
                     elseif obj:is_player() then
-                        if kingdoms.player.kingdom(obj:get_player_name()) and kingdoms.player.kingdom(obj:get_player_name()).id == meta:get_string("kingdom.id") then
+                        if kingdoms.player.kingdom(obj:get_player_name()) and kingdoms.player.is_friendly(meta:get_string("kingdom.id"), obj:get_player_name()) then
                             ok = false
                         end
                     end

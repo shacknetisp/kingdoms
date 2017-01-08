@@ -1,12 +1,15 @@
 kingdoms.db.kingdoms = kingdoms.db.kingdoms or {}
 
 local selectedmember = {}
+local slist_member = {}
+local slist_invitation = {}
 local selectedinvitation = {}
 
 local kmenuitems = {
     {"invite", "Manage invitations", "invite"},
     {"levels", "Manage levels"},
     {"info", "Manage the description"},
+    {"friendlies", "Manage friendlies"},
     {"rename", "Rename the kingdom", "rename"},
     {"leave", "Leave the kingdom"},
 }
@@ -19,6 +22,7 @@ local kcommand = {
         local kingdom = kingdoms.player.kingdom(name)
         if kingdom then
             selectedmember[name] = nil
+            slist_member[name] = kingdom.memberlist
             local membersstring = nil
             for _,n in ipairs(kingdom.memberlist) do
                 local member = kingdom.members[n]
@@ -43,7 +47,7 @@ local kcommand = {
                 .."label[0,0;"..minetest.formspec_escape(("%s | You are level %d in this kingdom."):format(kingdom.longname, kingdom.members[name].level)).."]"
                 .."label[0,0.5;Age: "
                     ..kingdoms.utils.s("day", math.floor((os.time() - kingdom.created) / 60 / 60 / 24))
-                    .." days | Corestone: "..minetest.formspec_escape(kingdom.corestone.pos and minetest.pos_to_string(kingdom.corestone.pos) or "N/A")
+                    .." | Corestone: "..minetest.formspec_escape(kingdom.corestone.pos and minetest.pos_to_string(kingdom.corestone.pos) or "N/A")
                     ..minetest.formspec_escape("\n")..kingdoms.utils.s("member", #kingdom.memberlist)
                     .." | Corestone score: "..tostring(math.ceil((kingdom.corestone.score / kingdoms.config.corestone_score_max) * 1000) / 10).."%"
                     .."]"
@@ -55,6 +59,7 @@ local kcommand = {
             selectedinvitation[name] = 1
             local invitestring = nil
             if kingdoms.db.invitations[name] then
+                slist_invitation[name] = kingdoms.db.invitations[name]
                 for _,invite in ipairs(kingdoms.db.invitations[name]) do
                     invitestring = (invitestring and (invitestring .. ",") or "")
                     invitestring = invitestring .. minetest.formspec_escape(("%s from %s"):format(kingdoms.db.kingdoms[invite.kingdom].longname, invite.sender))
@@ -121,6 +126,16 @@ local function leave_kingdom(name)
 
     -- If there are no members, then the kingdom is disbanded.
     if #kingdom.memberlist == 0 then
+
+        for _,k in pairs(kingdoms.db.kingdoms) do
+            if k.friendly_kingdoms[kingdom.id] then
+                k.fklist = kingdoms.utils.filteri(k.fklist, function(v)
+                    return v ~= kingdom.id
+                end)
+            end
+            k.friendly_kingdoms[kingdom.id] = nil
+        end
+
         kingdoms.db.invitations = kingdoms.utils.filteri(kingdoms.db.invitations, function(v) return v.kingdom ~= kingdom.id end)
         kingdoms.db.kingdoms[kingdom.id] = nil
         kingdoms.log("action", ("Kingdom %s ('%s') has been disbanded as '%s' leaves."):format(kingdom.id, kingdom.longname, name))
@@ -155,7 +170,7 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
             minetest.chat_send_player(name, "You must select an invitation.")
             return true
         end
-        local invite = kingdoms.db.invitations[name][selectedinvitation[name]]
+        local invite = slist_invitation[name][selectedinvitation[name]]
         if not invite then
             minetest.chat_send_player(name, "That invitation does not exist.")
             return true
@@ -201,6 +216,10 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
                 dug = 0,
                 score = kingdoms.config.corestone_score_max,
             },
+            friendly_players = {},
+            friendly_kingdoms = {},
+            fplist = {},
+            fklist = {},
         }
         for _,k in pairs(kingdoms.db.kingdoms) do
             if k.id == kingdom.id then
@@ -235,9 +254,11 @@ end)
 local formspec_invitations
 formspec_invitations = {
     selected = {},
+    slist = {},
     func = function(name)
         local kingdom = kingdoms.player.kingdom(name)
         formspec_invitations.selected[name] = kingdom.invitations[1]
+        formspec_invitations.slist[name] = kingdom.invitations
         minetest.show_formspec(name, "kingdoms:invitations",
             "size[9,7]"
             .."button[0,0;6,1;kingdoms_special_exit;X]"
@@ -282,7 +303,95 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
         end)
         return formspec_invitations.func(name)
     elseif fields.invitations then
-        formspec_invitations.selected[name] = kingdom.invitations[minetest.explode_textlist_event(fields.invitations).index]
+        formspec_invitations.selected[name] = formspec_invitations.slist[name][minetest.explode_textlist_event(fields.invitations).index]
+    end
+end)
+
+-- Manage the friendly list.
+local formspec_friendlies
+formspec_friendlies = {
+    selected_p = {},
+    slist_p = {},
+    selected_k = {},
+    slist_k = {},
+    func = function(name)
+        local kingdom = kingdoms.player.kingdom(name)
+        formspec_friendlies.selected_p[name] = kingdom.fplist[1]
+        formspec_friendlies.slist_p[name] = kingdom.fplist
+        formspec_friendlies.selected_k[name] = kingdom.fklist[1]
+        formspec_friendlies.slist_k[name] = kingdom.fpkist
+        local fklist = {}
+        for _,kid in ipairs(kingdom.fklist) do
+            table.insert(fklist, minetest.formspec_escape(kingdoms.db.kingdoms[kid].longname))
+        end
+        local x = ("button[0,5;4,1;removefp;Remove "..(formspec_friendlies.selected_p[name] or "N/A").."]"
+            .."button[5,5;4,1;removefk;Remove "..minetest.formspec_escape(formspec_friendlies.selected_k[name] and kingdoms.db.kingdoms[formspec_friendlies.selected_k[name]].longname or "N/A").."]"
+            .."field[0.4,6.75;4,0;pname;Name;]"
+            .."field[5.4,6.75;4,0;kname;Name;]"
+            .."button[0,7;4,1;addfp;Add Player]"
+            .."button[5,7;4,1;addfk;Add Kingdom by Player]")
+        if not kingdoms.player.can(name, "friendlies") then
+            x = ""
+        end
+        minetest.show_formspec(name, "kingdoms:friendlies",
+            (kingdoms.player.can(name, "friendlies") and "size[9,8]" or "size[9,5]")
+            .."button[0,0;6,1;kingdoms_special_exit;X]"
+            .."textlist[0,1;4,4;fplist;"..table.concat(kingdom.fplist, ",")..";1]"
+            .."textlist[5,1;4,4;fklist;"..table.concat(fklist, ",")..";1]"
+            ..x
+        )
+        return true
+    end,
+}
+
+minetest.register_on_player_receive_fields(function(player, formname, fields)
+    if formname ~= "kingdoms:friendlies" then return false end
+    local name = player:get_player_name()
+    local kingdom = kingdoms.player.kingdom(name)
+    if not kingdoms.player.can(name, "friendlies") then return true end
+    if fields.addfp then
+        if not core.get_auth_handler().get_auth(fields.pname) then
+            minetest.chat_send_player(name, "That player does not exist.")
+            return true
+        end
+        table.insert(kingdom.fplist, fields.pname)
+        kingdom.friendly_players[fields.pname] = true
+        return formspec_friendlies.func(name)
+    elseif fields.addfk then
+        if not core.get_auth_handler().get_auth(fields.kname) then
+            minetest.chat_send_player(name, "That player does not exist.")
+            return true
+        end
+        local pkingdom = kingdoms.player.kingdom(fields.kname)
+        if not pkingdom then
+            minetest.chat_send_player(name, "That player is not in a kingdom.")
+            return true
+        end
+        table.insert(kingdom.fklist, pkingdom.id)
+        kingdom.friendly_kingdoms[pkingdom.id] = true
+        return formspec_friendlies.func(name)
+    elseif fields.fplist then
+        formspec_friendlies.selected_p[name] = formspec_friendlies.slist_p[minetest.explode_textlist_event(fields.fplist).index]
+        return formspec_friendlies.func(name)
+    elseif fields.fklist then
+        formspec_friendlies.selected_k[name] = formspec_friendlies.slist_k[minetest.explode_textlist_event(fields.fklist).index]
+        return formspec_friendlies.func(name)
+    elseif fields.removefp then
+        local selected = formspec_friendlies.selected_p[name]
+        if not selected then return true end
+        kingdom.fplist = kingdoms.utils.filteri(kingdom.fplist, function(v)
+            return v ~= selected
+        end)
+        kingdom.friendly_players[selected] = nil
+        return formspec_friendlies.func(name)
+    elseif fields.removefk then
+        local selected = formspec_friendlies.selected_k[name]
+        if not selected then return true end
+        kingdom.fklist = kingdoms.utils.filteri(kingdom.fplist, function(v)
+            return v ~= selected
+        end)
+        kingdom.friendly_kingdoms[selected] = nil
+        return formspec_friendlies.func(name)
     end
 end)
 
@@ -496,10 +605,13 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
             minetest.show_formspec(name, "kingdoms:rename", "size[4,2]"
                 .."field[0.25,0.2;4,1;name;Kingdom's Name;"..minetest.formspec_escape(kingdom.longname).."]"
                 .."button[0,1;4,1;go;Set Name]")
+        elseif selected == "friendlies" then
+            formspec_friendlies.func(name)
         end
     elseif fields.members then
-        selectedmember[name] = kingdom.memberlist[minetest.explode_textlist_event(fields.members).index]
+        selectedmember[name] = slist_member[name][minetest.explode_textlist_event(fields.members).index]
         if not selectedmember[name] then return true end
+        if not kingdom.members[selectedmember[name]] then return kcommand.func(name) end
         return formspec_member.func(name)
     end
 end)

@@ -212,16 +212,15 @@ function magic.register_missile(name, texture, def, item_def)
             end
 
             for _,pos in ipairs(kingdoms.utils.find_nodes_by_area(pos, magic.config.turret_shield_radius, {"magic:turret"})) do
-                if self.kingdom == minetest.get_meta(pos):get_string("kingdom.id") then
-                    break
-                end
-                local turret_spell = magic.get_turret_spell(pos)
-                if turret_spell.protects and turret_spell.protects[def.element] and (self.was_near_turret > 1 or magic.use_turrent_spell(pos)) then
-                    self.was_near_turret = self.was_near_turret + 1
-                end
-                if def.near_turret(self, pos, turret_spell) then
-                    self.object:remove()
-                    return
+                if self.kingdom ~= minetest.get_meta(pos):get_string("kingdom.id") then
+                    local turret_spell = magic.get_turret_spell(pos)
+                    if turret_spell.protects and turret_spell.protects[def.element] and (self.was_near_turret > 1 or magic.use_turrent_spell(pos)) then
+                        self.was_near_turret = self.was_near_turret + 1
+                    end
+                    if def.near_turret(self, pos, turret_spell) then
+                        self.object:remove()
+                        return
+                    end
                 end
             end
 

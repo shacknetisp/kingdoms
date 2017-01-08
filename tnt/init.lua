@@ -298,14 +298,14 @@ local function tnt_explode(pos, radius, ignore_protection, ignore_on_blast, on_b
 	vm:update_map()
 	vm:update_liquids()
 
-        -- call nodeupdate for everything within 1.5x blast radius
+        -- update everything within 1.5x blast radius
         for z = -oldradius * 1.5, oldradius * 1.5 do
         for x = -oldradius * 1.5, oldradius * 1.5 do
         for y = -oldradius * 1.5, oldradius * 1.5 do
                 local s = vector.add(pos, {x = x, y = y, z = z})
                 local r = vector.distance(pos, s)
                 if r / oldradius < 1.4 then
-                        nodeupdate(s)
+                        minetest.check_for_falling(s)
                 end
         end
         end

@@ -55,16 +55,6 @@ function kingdoms.utils.spairs(t, order)
     end
 end
 
-function kingdoms.utils.probability_list(t)
-    local ret = {}
-    for k,v in pairs(t) do
-        for i=1,v do
-            table.insert(ret, k)
-        end
-    end
-    return ret
-end
-
 function kingdoms.utils.find_nodes_by_area(pos, r, names)
     return minetest.find_nodes_in_area({x = pos.x - r, y = pos.y - r, z = pos.z - r}, {x = pos.x + r, y = pos.y + r, z = pos.z + r}, names)
 end

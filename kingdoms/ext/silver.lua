@@ -58,7 +58,9 @@ minetest.register_node("kingdoms:silverblock", {
     sounds = default.node_sound_stone_defaults(),
 })
 
-kingdoms.register_dungeon_node("kingdoms:silverblock", 2)
+if rawget(_G, 'ancient_world') then
+    ancient_world.register_item("kingdoms:silverblock", 2)
+end
 
 minetest.register_craftitem("kingdoms:silver_lump", {
     description = "Silver Lump",

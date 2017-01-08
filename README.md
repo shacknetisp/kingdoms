@@ -8,7 +8,6 @@ Interesting features include:
 * Chat channels for the area, your kingdom, and everywhere.
 * Many magic crystals and essences which combine to form powerful devices and spells.
 * Several damage types and defenses.
-* Reward blocks found in dungeons.
 * The ability to hunt mobs via missile bombs.
 
 # Modifications

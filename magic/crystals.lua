@@ -143,7 +143,9 @@ function magic.register_crystal(def, nocraft)
         sounds = default.node_sound_stone_defaults(),
     })
 
-    kingdoms.at_mod_load("kingdoms", function() kingdoms.register_dungeon_node("magic:concentrated_crystal_"..def.name, (4 / #magic.crystals) * (def.rarity or 1)) end)
+    if rawget(_G, 'ancient_world') then
+        ancient_world.register_item("magic:concentrated_crystal_"..def.name, (4 / #magic.crystals) * (def.rarity or 1))
+    end
 
     minetest.register_craftitem("magic:"..def.name.."_essence", {
         description = def.desc.." Essence",

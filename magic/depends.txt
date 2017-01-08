@@ -1,4 +1,5 @@
 default
 kingdoms_meta
+ancient_world?
 mesecons_extrawires?
 tnt?

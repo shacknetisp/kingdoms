@@ -234,7 +234,7 @@ function magic.register_crystal(def, nocraft)
                 rarity = 14 * 14 * 14,
                 clust_num_ores = 3,
                 clust_size     = 2,
-                y_min          = 32,
+                y_min          = 50,
             },
         }
         for _,oredef in ipairs(ores) do

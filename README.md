@@ -31,6 +31,8 @@ Kingdoms also overrides a few default items.
 
 # Recommended/Tested Mods
 
+* [ancient_world](https://github.com/shacknetisp/ancient_world) has been hooked into for generating magic crystals and silver blocks as hidden rewards.
+
 * 3d_armor is fully compatible with kingdoms + magic and provides a variety of protections against all forms of "fleshy" damage. Kingdoms will disable the healing feature automatically.
 * unified_inventory is hooked into with a kingdoms button.
 

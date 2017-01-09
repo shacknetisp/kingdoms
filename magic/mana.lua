@@ -58,11 +58,13 @@ function magic.require_energy(player, cost, message)
     if magic.require_mana(player, cost) then
         return true
     end
-    if player:get_hp() <= cost then
+    local newcost = cost - p.mana
+    p.mana = 0
+    if player:get_hp() <= newcost then
         if message then minetest.chat_send_player(player:get_player_name(), "You do not have enough health.") end
         return false
     end
-    player:set_hp(player:get_hp() - cost)
+    player:set_hp(player:get_hp() - newcost)
     return true
 end
 

@@ -12,8 +12,10 @@ end
 domodfile("config.lua")
 
 local mod_ready_registry = {}
+local has_loaded = {}
 
 function kingdoms.mod_ready(mod)
+    has_loaded[mod] = true
     if mod_ready_registry[mod] then
         for _,f in ipairs(mod_ready_registry[mod]) do
             if f.params then
@@ -26,6 +28,9 @@ function kingdoms.mod_ready(mod)
 end
 
 function kingdoms.at_mod_load(mod, func, ...)
+    if has_loaded[mod] then
+        return func(...)
+    end
     mod_ready_registry[mod] = mod_ready_registry[mod] or {}
     table.insert(mod_ready_registry[mod], {
         func = func,

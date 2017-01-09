@@ -31,5 +31,9 @@ domodfile("spells/attack.lua")
 domodfile("spells/defense.lua")
 domodfile("spells/teleportation.lua")
 
+if rawget(_G, "ancient_world") then
+    domodfile("structures.lua")
+end
+
 magic.log("action", "Loaded.")
 kingdoms.mod_ready("magic")

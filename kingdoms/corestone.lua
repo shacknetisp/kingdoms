@@ -349,10 +349,12 @@ minetest.register_node("kingdoms:servercorestone", {
     end,
 
     on_rightclick = function(pos, node, clicker)
+        local f = io.open(minetest.get_modpath("kingdoms") .. "/../manual.md")
+        local t = f:read("*all")
+        f:close()
         minetest.show_formspec(clicker:get_player_name(), "kingdoms:kingdoms_info",
             "size[6,6]"
-            .."textarea[0.4,0.25;5.75,6.75;info;Info;"..minetest.formspec_escape(
-[[This is some help text.]]).."]"
+            .."textarea[0.4,0.25;5.75,6.75;info;Info;"..minetest.formspec_escape(t).."]"
         )
     end,
 })

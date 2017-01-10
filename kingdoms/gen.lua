@@ -8,6 +8,7 @@ if kingdoms.config.mapgen then
 
     default.register_biomes()
     default.register_decorations()
+    flowers.register_decorations()
     kingdoms.log("action", "Applied mapgen settings.")
 end
 magic.register_mapgen()

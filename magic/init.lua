@@ -24,6 +24,7 @@ domodfile("crafts.lua")
 domodfile("timegens.lua")
 domodfile("crystals.lua")
 domodfile("spells.lua")
+domodfile("potions.lua")
 domodfile("turrets.lua")
 
 domodfile("spells/action.lua")

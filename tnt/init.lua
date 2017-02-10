@@ -143,7 +143,11 @@ local function entity_physics(pos, radius)
 
 		local damage = (4 / dist) * radius
                 if not obj:get_luaentity() or not NO_HIT_ENTS[obj:get_luaentity().name] then
-                    magic.damage_obj(obj, {fleshy=damage/2, fire=damage/2})
+                    if rawget(_G, 'magic') then
+                        magic.damage_obj(obj, {fleshy=damage/2, fire=damage/2})
+                    else
+                        obj:punch(obj, 1.0, {full_punch_interval=1.0, damage_groups={fleshy=damage}, nil})
+                    end
                 end
 	end
 end

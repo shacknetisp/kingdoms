@@ -1,3 +1,15 @@
+local has_magic = rawget(_G, 'magic') ~= nil
+local essences = {
+    concentrated_area = has_magic and "magic:concentrated_area_essence" or "group:major_spellbinding",
+    control = has_magic and "magic:control_essence" or "group:spellbinding",
+    concentrated_control = has_magic and "magic:concentrated_control_essence" or "group:major_spellbinding",
+    solidity = has_magic and "magic:solidity_essence" or "group:spellbinding",
+    concentrated_solidity = has_magic and "magic:concentrated_solidity_essence" or "group:major_spellbinding",
+    rage = has_magic and "magic:rage_essence" or "group:spellbinding",
+    vitality = has_magic and "magic:vitality_essence" or "group:spellbinding",
+    concentrated_vitality = has_magic and "magic:concentrated_vitality_essence" or "group:major_spellbinding",
+}
+
 minetest.register_craft({
     output = 'default:chest_locked_heavy',
     recipe = {
@@ -8,24 +20,24 @@ minetest.register_craft({
 minetest.register_craft({
     output = "kingdoms:corestone",
     recipe = {
-        {"magic:concentrated_area_essence", "magic:control_essence"},
+        {essences.concentrated_area, essences.control},
         {"default:steelblock", "group:spellbinding"},
-        {"magic:solidity_essence", "group:major_spellbinding"}
+        {essences.solidity, "group:major_spellbinding"}
     }
 })
 minetest.register_craft({
     output = "kingdoms:claimward",
     recipe = {
-        {"magic:area_essence", ""},
-        {"default:steelblock", "magic:control_essence"},
+        {essences.area, ""},
+        {"default:steelblock", essences.control},
         {"group:spellbinding", ""}
     }
 })
 minetest.register_craft({
     output = "kingdoms:core_disruptor",
     recipe = {
-        {"magic:concentrated_area_essence", "magic:rage_essence"},
-        {"default:steelblock", "magic:concentrated_control_essence"},
+        {essences.concentrated_area, essences.rage},
+        {"default:steelblock", essences.concentrated_control},
         {"group:major_spellbinding", ""}
     }
 })
@@ -34,16 +46,16 @@ minetest.register_craft({
 minetest.register_craft({
     output = "kingdoms:materialized_wall_1 9",
     recipe = {
-        {"magic:vitality_essence", "", ""},
+        {essences.vitality, "", ""},
         {"group:stone", "group:stone", "group:stone"},
-        {"magic:concentrated_solidity_essence", "", ""}
+        {essences.concentrated_solidity, "", ""}
     }
 })
 minetest.register_craft({
     output = "kingdoms:materializer",
     recipe = {
-        {"magic:concentrated_vitality_essence", "magic:area_essence"},
+        {essences.concentrated_vitality, essences.area},
         {"group:stone", "group:major_spellbinding"},
-        {"magic:concentrated_solidity_essence", ""}
+        {essences.concentrated_solidity, ""}
     }
 })

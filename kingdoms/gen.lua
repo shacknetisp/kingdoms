@@ -6,4 +6,3 @@ if kingdoms.config.mapgen then
 
     kingdoms.log("action", "Applied mapgen settings.")
 end
-magic.register_mapgen()

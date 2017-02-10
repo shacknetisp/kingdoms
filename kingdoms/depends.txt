@@ -1,5 +1,5 @@
 default
 kingdoms_meta
-magic
+magic?
 ancient_world?
 3d_armor?

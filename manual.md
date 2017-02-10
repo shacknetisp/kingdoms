@@ -14,9 +14,8 @@ These claims cannot overlap with other claims, and must be spaced with at least 
 
 ## Defending Land
 
-Defending a neutral area, or even preventing enemies from entering your clamied area, is enhanced beyond personal battle by the addition of several nodes:
+Defending a neutral area, or even preventing enemies from entering your clamied area, is enhanced beyond personal battle by the addition of materializers.
 
-* Turrets, which, after a missile or shield spell is inserted, will ward off enemies by blasting spells at them and cancel or subdue enemy spells.
 * Materializers and Materialized Walls. The Walls act like hard stone, but when a Materializer is placed by them they will level from 1 to 4 over time. A level 4 node, when dug, will revert to a level 3 instead of vanishing, and so on down to a level 1. They will also absorb explosions, preventing damage inside them.
 
 ## Destroying a Corestone
@@ -26,41 +25,3 @@ The ability to take over another kingdom's claim is a large part of the game, an
 ### Defense
 
 In order to protect your corestone score and allow it to naturally regenerate, you must destroy any attacking disruptors. Any expensive disruptors gained in battle can then be turned against your enemies, so a successful defense will help you and harm your enemies greatly.
-You can place traps, turrets, wards, and fight personally to drive the attackers away from their disruptors.
-
-# Magic
-
-Closely integrated with the kingdoms mod is the magic mod, which provides many attacking and defending options.
-
-## Crystals
-
-Use of magic begins with Magic Crystals, of which most are found underground:
-
-* Rage (Red)
-* Calm (Blue)
-* Solidity (Yellow)
-* Vitality (Green)
-* Area (Teal)
-* Control (Purple)
-
-Some crystals must be produced through machiney:
-
-* Night (Grey), produced through *Nightcalls*
-* Day (White), produced through *Daypulls*
-
-## Essences
-
-Crystals can be melted into essences, which are the basic form of magic. When combined with spellbinding materials such as silver, essences can be merged into larger magical devices, or converted into spells.
-
-## Spells
-
-Spells are the most active form of magic. They are items which you can hold, and their use will drain upon your mana.
-There are three kinds of spells:
-
-* Attack: These include Fireballs, Bombs, and Missiles, each of which deal different kinds of damage and are thrown by left-clicking with them.
-* Defense: This includes spells such as shields, which can be held in the hand and will be consumed to counter damage thrown at you from spells or explosions.
-* Action: Other spells are in this category, such as a spell to drop flowing water over a small area or a spell to change water sources into ice (which also deals cold damage).
-
-## Mana
-
-Each player has a mana count, which regenerates slowly, speeding up if the player is nearly or at full health.

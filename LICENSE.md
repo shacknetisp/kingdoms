@@ -1,4 +1,4 @@
-Licenses for any modifications made for this modpack and the following mods in this modpack: kingdoms, magic, kingdoms_meta
+Licenses for any modifications made for this modpack and the following mods in this modpack: kingdoms, kingdoms_meta
 Other mods will contain appropriate README or LICENSE files.
 
 License for Code

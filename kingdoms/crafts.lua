@@ -1,5 +1,6 @@
 local has_magic = rawget(_G, 'magic') ~= nil
 local essences = {
+    area = has_magic and "magic:area_essence" or "group:spellbinding",
     concentrated_area = has_magic and "magic:concentrated_area_essence" or "group:major_spellbinding",
     control = has_magic and "magic:control_essence" or "group:spellbinding",
     concentrated_control = has_magic and "magic:concentrated_control_essence" or "group:major_spellbinding",
